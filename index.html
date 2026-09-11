@@ -419,7 +419,10 @@
                     { nombre: "Curita", genero: "H", id: 18 },
                     { nombre: "Alfonso Mora", genero: "H", id: 19 },
                     { nombre: "Cristian Jenny", genero: "H", id: 20 },
-                    { nombre: "Javi Conejo", genero: "H", id: 21 }
+                    { nombre: "Javi Conejo", genero: "H", id: 21 },
+                    { nombre: "Sevi", genero: "H", id: 22 },
+                    { nombre: "Neke", genero: "H", id: 23 },
+                    { nombre: "Jorge", genero: "H", id: 24 }
                 ];
                 guardarDatos();
             }
@@ -431,7 +434,7 @@
             localStorage.setItem('tornePadel', JSON.stringify(estado));
         }
 
-        // Agregar jugador
+        // Agregar jugador (con password)
         function agregarJugador() {
             const nombre = document.getElementById('nombreJugador').value.trim();
             const genero = document.getElementById('generoJugador').value;
@@ -441,16 +444,31 @@
                 return;
             }
 
+            accionPendiente = { tipo: 'agregarJugador', nombre, genero };
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('passwordInput').focus();
+            document.getElementById('passwordInput').value = '';
+        }
+
+        // Ejecutar agregar jugador después de password correcto
+        function ejecutarAgregarJugador(nombre, genero) {
             estado.jugadores.push({ nombre, genero, id: Date.now() });
             document.getElementById('nombreJugador').value = '';
             document.getElementById('generoJugador').value = '';
-            
             guardarDatos();
             actualizarUI();
         }
 
-        // Eliminar jugador
+        // Eliminar jugador (con password)
         function eliminarJugador(id) {
+            accionPendiente = { tipo: 'eliminarJugador', id };
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('passwordInput').focus();
+            document.getElementById('passwordInput').value = '';
+        }
+
+        // Ejecutar eliminar jugador después de password correcto
+        function ejecutarEliminarJugador(id) {
             estado.jugadores = estado.jugadores.filter(j => j.id !== id);
             guardarDatos();
             actualizarUI();
@@ -508,10 +526,20 @@
         function confirmarPassword() {
             const password = document.getElementById('passwordInput').value;
             if (password === PASSWORD) {
-                if (accionPendiente === 'generarParejas') {
-                    generarParejas();
-                } else if (accionPendiente === 'generarEmparejamientos') {
-                    generarEmparejamientos();
+                if (typeof accionPendiente === 'string') {
+                    // Acciones simples (string)
+                    if (accionPendiente === 'generarParejas') {
+                        generarParejas();
+                    } else if (accionPendiente === 'generarEmparejamientos') {
+                        generarEmparejamientos();
+                    }
+                } else if (typeof accionPendiente === 'object') {
+                    // Acciones complejas (object)
+                    if (accionPendiente.tipo === 'agregarJugador') {
+                        ejecutarAgregarJugador(accionPendiente.nombre, accionPendiente.genero);
+                    } else if (accionPendiente.tipo === 'eliminarJugador') {
+                        ejecutarEliminarJugador(accionPendiente.id);
+                    }
                 }
                 cancelarPassword();
             } else {
