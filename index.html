@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Aplicación para organizar torneos de pádel. Boda de Nando y Mónica.">
     <meta name="author" content="Álvaro">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Torneo de Pádel - Boda de Nando y Mónica</title>
     <style>
         * {
@@ -36,6 +39,31 @@
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
         }
 
         .grid-main {
@@ -380,9 +408,17 @@
         </div>
     </div>
 
+    <!-- BOTÓN FLOTANTE DE ACTUALIZACIÓN -->
+    <button class="refresh-btn" onclick="forzarActualizacion()">🔄 Actualizar</button>
+
     <script>
         const PASSWORD = "BodaNyM";
         let accionPendiente = null;
+
+        // Forzar actualización sin caché
+        function forzarActualizacion() {
+            location.reload(true);
+        }
 
         // Estructuras de datos
         let estado = {
