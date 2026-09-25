@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplicación para organizar torneos de pádel. Boda de Nando y Mónica.">
-    <meta name="author" content="Álvaro">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Torneo de Pádel - Boda de Nando y Mónica</title>
+    <title>🎾 Torneo de Pádel - Boda de Nando y Mónica</title>
     <style>
         * {
             margin: 0;
@@ -20,115 +15,93 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             color: #333;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 20px;
         }
 
         h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .refresh-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 50px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 999;
-        }
-
-        .refresh-btn:hover {
-            transform: scale(1.1) rotate(180deg);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-        }
-
-        .refresh-btn:active {
-            transform: scale(0.95);
-        }
-
-        .grid-main {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .card h2 {
+            text-align: center;
             color: #667eea;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 18px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
+        input,
+        select {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
         }
 
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
         }
 
+        .form-group input[type="text"] {
+            flex: 1;
+            min-width: 150px;
+        }
+
         button {
+            padding: 10px 14px;
             background: #667eea;
             color: white;
-            padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
-            width: 100%;
-            margin-top: 10px;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
         button:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: #5568d3;
+            transform: translateY(-1px);
         }
 
         button.danger {
@@ -139,593 +112,1178 @@
             background: #c0392b;
         }
 
-        button.secondary {
-            background: #95a5a6;
+        button.success {
+            background: #27ae60;
         }
 
-        button.secondary:hover {
-            background: #7f8c8d;
+        button.success:hover {
+            background: #229954;
         }
 
-        button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
+        button.warning {
+            background: #f39c12;
         }
 
-        .jugador-item {
+        button.warning:hover {
+            background: #d68910;
+        }
+
+        .button-group {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 4px solid #667eea;
-        }
-
-        .genero-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-
-        .genero-badge.H {
-            background: #3498db;
-            color: white;
-        }
-
-        .genero-badge.M {
-            background: #e91e63;
-            color: white;
-        }
-
-        .pareja-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .pareja-card h3 {
-            font-size: 1.1em;
-            margin-bottom: 8px;
-        }
-
-        .pareja-card p {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .partidos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .partido-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .partido-card h4 {
-            margin-bottom: 10px;
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .vs {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .password-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .password-modal.active {
-            display: flex;
-        }
-
-        .password-box {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-            min-width: 300px;
-        }
-
-        .password-box h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .password-box input {
-            margin-bottom: 15px;
-        }
-
-        .password-box button {
-            margin: 10px 5px;
-            display: inline-block;
-            width: calc(50% - 7.5px);
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 10px;
-            margin-top: 15px;
+            margin-bottom: 15px;
         }
 
-        .stat-box {
-            background: #f0f4ff;
+        .stat {
+            background: #f8f9fa;
             padding: 12px;
-            border-radius: 5px;
+            border-radius: 6px;
             text-align: center;
+            border: 1px solid #e0e0e0;
         }
 
         .stat-number {
-            font-size: 1.8em;
-            color: #667eea;
+            font-size: 24px;
             font-weight: bold;
+            color: #667eea;
         }
 
         .stat-label {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 5px;
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
         }
 
-        .fase {
-            margin-top: 20px;
+        .player-list {
+            list-style: none;
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0;
         }
 
-        .fase h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .empty-state {
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .player-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .player-gender {
+            font-size: 16px;
+        }
+
+        .player-remove {
+            background: #e74c3c;
+            padding: 6px 10px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .player-remove:hover {
+            background: #c0392b;
+        }
+
+        .pairs-list,
+        .matches-list {
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0;
+        }
+
+        .pair-item,
+        .match-item {
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            border-left: 4px solid #667eea;
+            font-size: 13px;
+        }
+
+        .pair-item:last-child,
+        .match-item:last-child {
+            border-bottom: none;
+        }
+
+        .match-item {
+            border-left-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        .match-with-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .match-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .match-result {
+            background: #fff3cd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .match-result.finished {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .match-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .match-button {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .empty-message {
+            color: #aaa;
+            font-style: italic;
+            padding: 15px;
             text-align: center;
-            padding: 30px;
-            color: #999;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
         }
 
-        @media (max-width: 768px) {
-            .grid-main {
-                grid-template-columns: 1fr;
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .ranking-table thead {
+            background: #667eea;
+            color: white;
+        }
+
+        .ranking-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .ranking-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .ranking-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ranking-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .ranking-position {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal-text {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .result-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .result-group {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .result-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .result-group input {
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            padding: 10px 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: inline-block;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .file-input-label:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .backup-section {
+            background: #f0f8ff;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .backup-text {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+            font-size: 13px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+            font-size: 13px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
             }
 
             h1 {
-                font-size: 1.8em;
+                font-size: 22px;
             }
 
-            .partidos-grid {
-                grid-template-columns: 1fr;
+            .section {
+                margin-bottom: 18px;
+                padding-bottom: 15px;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group input,
+            .form-group select {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
+
+            .player-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .player-remove {
+                width: 100%;
+                text-align: center;
+            }
+
+            .match-with-result {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .match-actions {
+                justify-content: space-between;
+            }
+
+            .match-button {
+                flex: 1;
+            }
+
+            .ranking-table {
+                font-size: 12px;
+            }
+
+            .ranking-table th,
+            .ranking-table td {
+                padding: 8px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <header>
-            <h1>🎾 Torneo de Pádel</h1>
-            <p>💍 Boda de Nando y Mónica 💒 🍾 🎊</p>
-        </header>
+        <h1>🎾 Torneo de Pádel</h1>
+        <p class="subtitle">💍 Boda de Nando y Mónica 💒 🍾 🎊</p>
 
-        <div class="grid-main">
-            <!-- PANEL IZQUIERDO: Gestión de jugadores y parejas -->
-            <div class="card">
-                <h2>Jugadores & Parejas</h2>
-                
-                <div class="form-group">
-                    <label>Nombre del jugador</label>
-                    <input type="text" id="nombreJugador" placeholder="Ej: Juan" />
-                </div>
+        <div id="successMessage" class="success-message"></div>
+        <div id="errorMessage" class="error-message"></div>
 
-                <div class="form-group">
-                    <label>Género</label>
-                    <select id="generoJugador">
-                        <option value="">-- Selecciona --</option>
-                        <option value="H">👨 Hombre</option>
-                        <option value="M">👩 Mujer</option>
-                    </select>
-                </div>
+        <!-- SECCIÓN 1: Jugadores & Parejas -->
+        <div class="section">
+            <h2>👥 Jugadores & Parejas</h2>
 
-                <button onclick="agregarJugador()">➕ Agregar Jugador</button>
-
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-number" id="countH">0</div>
-                        <div class="stat-label">Hombres</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="countM">0</div>
-                        <div class="stat-label">Mujeres</div>
-                    </div>
-                </div>
-
-                <div id="listaJugadores"></div>
-
-                <button class="secondary" onclick="solicitarPassword('generarParejas')" style="margin-top: 20px;">🔀 Generar Parejas (Aleatorio)</button>
-
-                <button class="danger" onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
+            <div class="form-group">
+                <input type="text" id="playerName" placeholder="Nombre del jugador" autocomplete="off">
+                <select id="playerGender">
+                    <option value="">-- Selecciona --</option>
+                    <option value="male">👨 Hombre</option>
+                    <option value="female">👩 Mujer</option>
+                </select>
+                <button onclick="requestPassword('addPlayer')">➕ Agregar</button>
             </div>
 
-            <!-- PANEL DERECHO: Emparejamientos y partidos -->
-            <div class="card">
-                <h2>Emparejamientos</h2>
-
-                <div id="parejas" class="empty-state">
-                    Sin parejas todavía. Genera las parejas primero.
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="maleCount">0</div>
+                    <div class="stat-label">Hombres</div>
                 </div>
+                <div class="stat">
+                    <div class="stat-number" id="femaleCount">0</div>
+                    <div class="stat-label">Mujeres</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
 
-                <button class="secondary" onclick="solicitarPassword('generarEmparejamientos')" style="margin-top: 20px;">⚔️ Generar Emparejamientos</button>
+            <ul class="player-list" id="playerList"></ul>
 
-                <button class="secondary" onclick="mostrarPartidos()" style="margin-top: 10px;">👀 Ver Partidos</button>
+            <div class="button-group" style="margin-top: 12px;">
+                <button onclick="requestPassword('generatePairs')">🔀 Generar Parejas (Aleatorio)</button>
+                <button class="danger" onclick="requestPassword('clearAllPlayers')">🗑️ Limpiar Todo</button>
             </div>
         </div>
 
-        <!-- SECCIÓN DE PARTIDOS -->
-        <div class="card">
+        <!-- SECCIÓN 2: Emparejamientos -->
+        <div class="section">
+            <h2>⚔️ Emparejamientos</h2>
+            <div class="pairs-list" id="pairsList">
+                <div class="empty-message">Sin parejas todavía. Genera las parejas primero.</div>
+            </div>
+            <div class="button-group" style="margin-top: 12px;">
+                <button onclick="requestPassword('generateMatches')">⚔️ Generar Emparejamientos</button>
+                <button class="warning" onclick="viewMatches()">👀 Ver Partidos</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: Partidos del Torneo -->
+        <div class="section">
             <h2>📋 Partidos del Torneo</h2>
+            <div class="matches-list" id="matchesList">
+                <div class="empty-message">Los partidos aparecerán aquí una vez generes los emparejamientos.
+                </div>
+            </div>
+        </div>
 
-            <div id="contenedorPartidos" class="empty-state">
-                Los partidos aparecerán aquí una vez generes los emparejamientos.
+        <!-- SECCIÓN 4: Clasificación -->
+        <div class="section">
+            <h2>🏆 Clasificación</h2>
+            <table class="ranking-table" id="rankingTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">Pos</th>
+                        <th>Pareja</th>
+                        <th style="width: 50px;">Pts</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingBody">
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: #aaa; padding: 20px;">
+                            Genera los emparejamientos para ver la clasificación
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECCIÓN 5: Backup & Restore -->
+        <div class="section">
+            <h2>💾 Backup & Restauración</h2>
+            <div class="backup-section">
+                <p class="backup-text">📥 Descargar copia de seguridad protegida por contraseña:</p>
+                <div class="button-group">
+                    <button class="success" onclick="downloadBackup()">📥 Descargar Backup</button>
+                    <label class="file-input-label" for="restoreFile">📤 Restaurar Archivo</label>
+                    <input type="file" id="restoreFile" accept=".backup">
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE CONTRASEÑA -->
-    <div class="password-modal" id="passwordModal">
-        <div class="password-box">
-            <h3>🔐 Contraseña</h3>
-            <input type="password" id="passwordInput" placeholder="Ingresa la contraseña" onkeypress="if(event.key==='Enter') confirmarPassword()" />
-            <div>
-                <button onclick="confirmarPassword()">✓ Aceptar</button>
-                <button class="danger" onclick="cancelarPassword()">✗ Cancelar</button>
+    <!-- Modal para contraseña de acciones -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🔐 Contraseña</div>
+            <p class="modal-text">Introduce la contraseña para realizar esta acción:</p>
+            <input type="password" class="modal-input" id="passwordInput" placeholder="Contraseña"
+                onkeypress="if(event.key === 'Enter') confirmPassword()">
+            <div class="modal-buttons">
+                <button onclick="cancelPassword()" style="background: #aaa;">✗ Cancelar</button>
+                <button class="success" onclick="confirmPassword()">✓ Confirmar</button>
             </div>
         </div>
     </div>
 
-    <!-- BOTÓN FLOTANTE DE ACTUALIZACIÓN -->
-    <button class="refresh-btn" onclick="forzarActualizacion()">🔄 Actualizar</button>
+    <!-- Modal para registrar resultado -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">📊 Registrar Resultado</div>
+            <p class="modal-text" id="resultModalText"></p>
+            
+            <div class="result-form">
+                <div class="result-group">
+                    <label id="pair1Label">Pareja 1 (Sets)</label>
+                    <input type="number" id="sets1" min="0" max="2" value="0">
+                </div>
+                <div class="result-group">
+                    <label id="pair2Label">Pareja 2 (Sets)</label>
+                    <input type="number" id="sets2" min="0" max="2" value="0">
+                </div>
+            </div>
+
+            <p class="modal-text" style="color: #999; font-size: 12px;">El ganador es quien gane 2 sets (formato mejor de 3)</p>
+
+            <div class="modal-buttons">
+                <button onclick="cancelResult()" style="background: #aaa;">✗ Cancelar</button>
+                <button class="success" onclick="confirmResult()">✓ Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para contraseña de descarga -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🔐 Descargar Backup</div>
+            <p class="modal-text">Establece una contraseña para proteger este backup:</p>
+            <input type="password" class="modal-input" id="downloadPassword" placeholder="Contraseña"
+                onkeypress="if(event.key === 'Enter') confirmDownload()">
+            <input type="password" class="modal-input" id="downloadPasswordConfirm" placeholder="Confirmar contraseña"
+                onkeypress="if(event.key === 'Enter') confirmDownload()">
+            <div class="modal-buttons">
+                <button onclick="cancelDownload()" style="background: #aaa;">✗ Cancelar</button>
+                <button class="success" onclick="confirmDownload()">✓ Descargar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para contraseña de restauración -->
+    <div id="restoreModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🔓 Restaurar Backup</div>
+            <p class="modal-text">Introduce la contraseña del backup:</p>
+            <input type="password" class="modal-input" id="restorePassword" placeholder="Contraseña"
+                onkeypress="if(event.key === 'Enter') confirmRestore()">
+            <div class="modal-buttons">
+                <button onclick="cancelRestore()" style="background: #aaa;">✗ Cancelar</button>
+                <button class="success" onclick="confirmRestore()">✓ Restaurar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const PASSWORD = "BodaNyM";
-        let accionPendiente = null;
+        // Constante de contraseña
+        const APP_PASSWORD = "BodaNyM";
 
-        // Forzar actualización sin caché
-        function forzarActualizacion() {
-            location.reload(true);
-        }
+        // Datos iniciales precargados
+        const initialPlayers = [
+            // HOMBRES (27)
+            { name: "Alvaro", gender: "male" },
+            { name: "Félix", gender: "male" },
+            { name: "José Manuel", gender: "male" },
+            { name: "Iñaki", gender: "male" },
+            { name: "Raúl Alicia", gender: "male" },
+            { name: "Gabriel García", gender: "male" },
+            { name: "Luismi", gender: "male" },
+            { name: "Neke", gender: "male" },
+            { name: "Sevi", gender: "male" },
+            { name: "Carlos Montilla", gender: "male" },
+            { name: "Dani", gender: "male" },
+            { name: "Morita", gender: "male" },
+            { name: "Nando", gender: "male" },
+            { name: "Víctor", gender: "male" },
+            { name: "Curita", gender: "male" },
+            { name: "Soto", gender: "male" },
+            { name: "Rubén", gender: "male" },
+            { name: "Alfonso", gender: "male" },
+            { name: "Dani Rojas", gender: "male" },
+            { name: "Mario", gender: "male" },
+            { name: "Alfonso Mora", gender: "male" },
+            { name: "Cristian Jenny", gender: "male" },
+            { name: "Javi Conejo", gender: "male" },
+            { name: "Jorge", gender: "male" },
+            { name: "Raul", gender: "male" },
+            { name: "Josete", gender: "male" },
+            { name: "Dinamita", gender: "male" },
+            // MUJERES (9)
+            { name: "Virginia Jorge", gender: "female" },
+            { name: "Kitty", gender: "female" },
+            { name: "Cristina", gender: "female" },
+            { name: "Elena", gender: "female" },
+            { name: "Eva", gender: "female" },
+            { name: "Natalia", gender: "female" },
+            { name: "Jenny", gender: "female" },
+            { name: "Marta Ocon", gender: "female" },
+            { name: "Alicia Prima", gender: "female" }
+        ];
 
-        // Estructuras de datos
-        let estado = {
-            jugadores: [],
-            parejas: [],
-            partidos: []
+        // Estructura de datos
+        let gameData = {
+            players: [],
+            pairs: [],
+            matches: []
         };
 
-        // Cargar datos del localStorage
-        function cargarDatos() {
-            const datos = localStorage.getItem('tornePadel');
-            if (datos) {
-                estado = JSON.parse(datos);
+        let pendingAction = null;
+        let pendingRestoreFile = null;
+        let pendingResultMatchId = null;
+
+        // Cargar datos del localStorage o usar iniciales
+        function loadData() {
+            const saved = localStorage.getItem('padelTournament');
+            if (saved) {
+                try {
+                    gameData = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error al cargar datos:', e);
+                    initializeWithPlayers();
+                }
             } else {
-                // Pre-cargar jugadores iniciales
-                estado.jugadores = [
-                    { nombre: "Alvaro", genero: "H", id: 1 },
-                    { nombre: "Virginia Jorge", genero: "M", id: 2 },
-                    { nombre: "Félix", genero: "H", id: 3 },
-                    { nombre: "José Manuel", genero: "H", id: 4 },
-                    { nombre: "Iñaki", genero: "H", id: 5 },
-                    { nombre: "Raúl Alicia", genero: "H", id: 6 },
-                    { nombre: "Gabriel García", genero: "H", id: 7 },
-                    { nombre: "Carlos Kitty", genero: "H", id: 8 },
-                    { nombre: "Cristina Curita", genero: "M", id: 9 },
-                    { nombre: "Kitty", genero: "M", id: 10 },
-                    { nombre: "Luismi", genero: "H", id: 11 },
-                    { nombre: "Raul", genero: "H", id: 12 },
-                    { nombre: "Josete", genero: "H", id: 13 },
-                    { nombre: "Dinamita", genero: "H", id: 14 },
-                    { nombre: "Alicia Prima", genero: "M", id: 15 },
-                    { nombre: "Mario", genero: "H", id: 16 },
-                    { nombre: "Soto Nuevo", genero: "H", id: 17 },
-                    { nombre: "Curita", genero: "H", id: 18 },
-                    { nombre: "Alfonso Mora", genero: "H", id: 19 },
-                    { nombre: "Cristian Jenny", genero: "H", id: 20 },
-                    { nombre: "Javi Conejo", genero: "H", id: 21 },
-                    { nombre: "Sevi", genero: "H", id: 22 },
-                    { nombre: "Neke", genero: "H", id: 23 },
-                    { nombre: "Jorge", genero: "H", id: 24 }
-                ];
-                guardarDatos();
+                initializeWithPlayers();
             }
-            actualizarUI();
+            updateUI();
         }
 
-        // Guardar datos
-        function guardarDatos() {
-            localStorage.setItem('tornePadel', JSON.stringify(estado));
+        function initializeWithPlayers() {
+            gameData.players = initialPlayers.map((p, idx) => ({
+                id: Date.now() + idx,
+                name: p.name,
+                gender: p.gender
+            }));
+            saveData();
         }
 
-        // Agregar jugador (con password)
-        function agregarJugador() {
-            const nombre = document.getElementById('nombreJugador').value.trim();
-            const genero = document.getElementById('generoJugador').value;
+        // Guardar datos en localStorage
+        function saveData() {
+            localStorage.setItem('padelTournament', JSON.stringify(gameData));
+        }
 
-            if (!nombre || !genero) {
-                alert('Por favor completa nombre y género');
+        // Solicitar contraseña
+        function requestPassword(action) {
+            pendingAction = action;
+            document.getElementById('passwordModal').classList.add('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+        }
+
+        function cancelPassword() {
+            document.getElementById('passwordModal').classList.remove('show');
+            pendingAction = null;
+        }
+
+        function confirmPassword() {
+            const pass = document.getElementById('passwordInput').value;
+            
+            if (pass !== APP_PASSWORD) {
+                showError('❌ Contraseña incorrecta.');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
                 return;
             }
 
-            accionPendiente = { tipo: 'agregarJugador', nombre, genero };
-            document.getElementById('passwordModal').classList.add('active');
-            document.getElementById('passwordInput').focus();
-            document.getElementById('passwordInput').value = '';
+            // Ejecutar acción
+            switch (pendingAction) {
+                case 'addPlayer':
+                    executeAddPlayer();
+                    break;
+                case 'generatePairs':
+                    executeGeneratePairs();
+                    break;
+                case 'generateMatches':
+                    executeGenerateMatches();
+                    break;
+                case 'clearAllPlayers':
+                    executeClearAllPlayers();
+                    break;
+            }
+
+            cancelPassword();
         }
 
-        // Ejecutar agregar jugador después de password correcto
-        function ejecutarAgregarJugador(nombre, genero) {
-            estado.jugadores.push({ nombre, genero, id: Date.now() });
-            document.getElementById('nombreJugador').value = '';
-            document.getElementById('generoJugador').value = '';
-            guardarDatos();
-            actualizarUI();
+        // Agregar jugador
+        function executeAddPlayer() {
+            const name = document.getElementById('playerName').value.trim();
+            const gender = document.getElementById('playerGender').value;
+
+            if (!name || !gender) {
+                showError('Por favor, ingresa nombre y género.');
+                return;
+            }
+
+            if (gameData.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                showError('Este jugador ya existe.');
+                return;
+            }
+
+            gameData.players.push({ id: Date.now(), name, gender });
+            saveData();
+            updateUI();
+            document.getElementById('playerName').value = '';
+            document.getElementById('playerGender').value = '';
+            document.getElementById('playerName').focus();
+            showSuccess('Jugador agregado: ' + name);
         }
 
-        // Eliminar jugador (con password)
-        function eliminarJugador(id) {
-            accionPendiente = { tipo: 'eliminarJugador', id };
-            document.getElementById('passwordModal').classList.add('active');
-            document.getElementById('passwordInput').focus();
-            document.getElementById('passwordInput').value = '';
+        // Eliminar jugador
+        function removePlayer(id) {
+            requestPassword('removePlayer');
+            pendingAction = { type: 'removePlayer', playerId: id };
         }
 
-        // Ejecutar eliminar jugador después de password correcto
-        function ejecutarEliminarJugador(id) {
-            estado.jugadores = estado.jugadores.filter(j => j.id !== id);
-            guardarDatos();
-            actualizarUI();
+        function executeRemovePlayer() {
+            const id = pendingAction.playerId;
+            const player = gameData.players.find(p => p.id === id);
+            gameData.players = gameData.players.filter(p => p.id !== id);
+            gameData.pairs = [];
+            gameData.matches = [];
+            saveData();
+            updateUI();
+            showSuccess('Jugador eliminado: ' + player.name);
+        }
+
+        // Limpiar todo
+        function executeClearAllPlayers() {
+            if (confirm('¿Estás seguro de que deseas eliminar todos los jugadores, parejas y partidos?')) {
+                gameData = { players: [], pairs: [], matches: [] };
+                saveData();
+                updateUI();
+                showSuccess('Todos los datos han sido eliminados.');
+            }
+        }
+
+        // Generar parejas
+        function executeGeneratePairs() {
+            if (gameData.players.length < 2) {
+                showError('Necesitas al menos 2 jugadores.');
+                return;
+            }
+
+            const shuffled = [...gameData.players].sort(() => Math.random() - 0.5);
+            gameData.pairs = [];
+
+            for (let i = 0; i < shuffled.length - 1; i += 2) {
+                gameData.pairs.push({
+                    id: Date.now() + i,
+                    player1: shuffled[i],
+                    player2: shuffled[i + 1]
+                });
+            }
+
+            if (shuffled.length % 2 !== 0) {
+                gameData.pairs.push({
+                    id: Date.now() + shuffled.length,
+                    player1: shuffled[shuffled.length - 1],
+                    player2: null
+                });
+            }
+
+            gameData.matches = [];
+            saveData();
+            updateUI();
+            showSuccess('Parejas generadas: ' + gameData.pairs.length + ' parejas');
+        }
+
+        // Generar emparejamientos
+        function executeGenerateMatches() {
+            if (gameData.pairs.length < 2) {
+                showError('Necesitas al menos 2 parejas para generar emparejamientos.');
+                return;
+            }
+
+            const shuffledPairs = [...gameData.pairs].sort(() => Math.random() - 0.5);
+            gameData.matches = [];
+
+            for (let i = 0; i < shuffledPairs.length - 1; i += 2) {
+                if (shuffledPairs[i + 1]) {
+                    gameData.matches.push({
+                        id: Date.now() + i,
+                        pair1: shuffledPairs[i],
+                        pair2: shuffledPairs[i + 1],
+                        sets1: 0,
+                        sets2: 0,
+                        finished: false
+                    });
+                }
+            }
+
+            saveData();
+            updateUI();
+            showSuccess('Emparejamientos generados: ' + gameData.matches.length + ' partidos');
+        }
+
+        // Ver partidos
+        function viewMatches() {
+            if (gameData.matches.length === 0) {
+                showError('No hay emparejamientos. Genera primero.');
+                return;
+            }
+            document.querySelector('.matches-list').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Registrar resultado
+        function registerResult(matchId) {
+            const match = gameData.matches.find(m => m.id === matchId);
+            if (!match) return;
+
+            pendingResultMatchId = matchId;
+            
+            const pair1 = match.pair1.player1.name + ' & ' + (match.pair1.player2 ? match.pair1.player2.name : '');
+            const pair2 = match.pair2.player1.name + ' & ' + (match.pair2.player2 ? match.pair2.player2.name : '');
+
+            document.getElementById('resultModalText').textContent = `${pair1} vs ${pair2}`;
+            document.getElementById('pair1Label').textContent = pair1 + ' (Sets)';
+            document.getElementById('pair2Label').textContent = pair2 + ' (Sets)';
+            document.getElementById('sets1').value = match.sets1 || 0;
+            document.getElementById('sets2').value = match.sets2 || 0;
+
+            document.getElementById('resultModal').classList.add('show');
+            document.getElementById('sets1').focus();
+        }
+
+        function cancelResult() {
+            document.getElementById('resultModal').classList.remove('show');
+            pendingResultMatchId = null;
+        }
+
+        function confirmResult() {
+            const sets1 = parseInt(document.getElementById('sets1').value) || 0;
+            const sets2 = parseInt(document.getElementById('sets2').value) || 0;
+
+            if ((sets1 < 2 && sets2 < 2) || (sets1 >= 2 && sets2 >= 2)) {
+                showError('❌ El resultado no es válido. Un equipo debe ganar 2 sets.');
+                return;
+            }
+
+            const match = gameData.matches.find(m => m.id === pendingResultMatchId);
+            if (!match) return;
+
+            match.sets1 = sets1;
+            match.sets2 = sets2;
+            match.finished = true;
+
+            saveData();
+            updateUI();
+            cancelResult();
+            showSuccess('✅ Resultado guardado correctamente.');
+        }
+
+        // Descargar backup
+        function downloadBackup() {
+            if (gameData.players.length === 0) {
+                showError('No hay datos para hacer backup.');
+                return;
+            }
+            document.getElementById('downloadModal').classList.add('show');
+            document.getElementById('downloadPassword').focus();
+        }
+
+        function cancelDownload() {
+            document.getElementById('downloadModal').classList.remove('show');
+            document.getElementById('downloadPassword').value = '';
+            document.getElementById('downloadPasswordConfirm').value = '';
+        }
+
+        function confirmDownload() {
+            const pass = document.getElementById('downloadPassword').value;
+            const passConfirm = document.getElementById('downloadPasswordConfirm').value;
+
+            if (!pass) {
+                showError('Por favor, establece una contraseña.');
+                return;
+            }
+
+            if (pass !== passConfirm) {
+                showError('Las contraseñas no coinciden.');
+                return;
+            }
+
+            const backup = {
+                version: 1,
+                timestamp: new Date().toISOString(),
+                data: btoa(JSON.stringify(gameData)),
+                password: btoa(pass)
+            };
+
+            const backupStr = JSON.stringify(backup);
+            const blob = new Blob([backupStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `torneo-padel-backup-${new Date().getTime()}.backup`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            cancelDownload();
+            showSuccess('✅ Backup descargado correctamente.');
+        }
+
+        // Restaurar backup
+        document.getElementById('restoreFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                try {
+                    const backup = JSON.parse(event.target.result);
+                    pendingRestoreFile = backup;
+                    document.getElementById('restoreModal').classList.add('show');
+                    document.getElementById('restorePassword').focus();
+                } catch (err) {
+                    showError('El archivo no es válido.');
+                    document.getElementById('restoreFile').value = '';
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function cancelRestore() {
+            document.getElementById('restoreModal').classList.remove('show');
+            document.getElementById('restorePassword').value = '';
+            pendingRestoreFile = null;
+            document.getElementById('restoreFile').value = '';
+        }
+
+        function confirmRestore() {
+            const pass = document.getElementById('restorePassword').value;
+
+            if (!pass) {
+                showError('Por favor, ingresa la contraseña.');
+                return;
+            }
+
+            if (!pendingRestoreFile) {
+                showError('No hay archivo para restaurar.');
+                return;
+            }
+
+            const storedPassword = pendingRestoreFile.password;
+            const hashedInput = btoa(pass);
+
+            if (hashedInput !== storedPassword) {
+                showError('❌ Contraseña incorrecta.');
+                return;
+            }
+
+            try {
+                gameData = JSON.parse(atob(pendingRestoreFile.data));
+                saveData();
+                updateUI();
+                cancelRestore();
+                showSuccess('✅ Backup restaurado exitosamente.');
+            } catch (err) {
+                showError('Error al restaurar: ' + err.message);
+            }
         }
 
         // Actualizar UI
-        function actualizarUI() {
-            actualizarListaJugadores();
-            actualizarStats();
-            actualizarParejas();
+        function updateUI() {
+            updatePlayerList();
+            updateStats();
+            updatePairsList();
+            updateMatchesList();
+            updateRanking();
         }
 
-        function actualizarStats() {
-            const countH = estado.jugadores.filter(j => j.genero === 'H').length;
-            const countM = estado.jugadores.filter(j => j.genero === 'M').length;
-            document.getElementById('countH').textContent = countH;
-            document.getElementById('countM').textContent = countM;
-        }
-
-        function actualizarListaJugadores() {
-            const contenedor = document.getElementById('listaJugadores');
-            if (estado.jugadores.length === 0) {
-                contenedor.innerHTML = '<div class="empty-state">No hay jugadores aún</div>';
+        function updatePlayerList() {
+            const list = document.getElementById('playerList');
+            if (gameData.players.length === 0) {
+                list.innerHTML = '<div class="empty-message">No hay jugadores agregados.</div>';
                 return;
             }
 
-            contenedor.innerHTML = estado.jugadores.map(j => `
-                <div class="jugador-item">
-                    <div>
-                        <strong>${j.nombre}</strong>
-                        <span class="genero-badge ${j.genero}">${j.genero === 'H' ? '👨 Hombre' : '👩 Mujer'}</span>
+            list.innerHTML = gameData.players.map(p => `
+                <li class="player-item">
+                    <div class="player-info">
+                        <span class="player-gender">${p.gender === 'male' ? '👨' : '👩'}</span>
+                        <span class="player-name">${p.name}</span>
                     </div>
-                    <button class="danger" onclick="eliminarJugador(${j.id})" style="width: 50px; padding: 5px;">✕</button>
+                    <button class="player-remove" onclick="removePlayer(${p.id})">Eliminar</button>
+                </li>
+            `).join('');
+        }
+
+        function updateStats() {
+            const males = gameData.players.filter(p => p.gender === 'male').length;
+            const females = gameData.players.filter(p => p.gender === 'female').length;
+            document.getElementById('maleCount').textContent = males;
+            document.getElementById('femaleCount').textContent = females;
+            document.getElementById('totalCount').textContent = gameData.players.length;
+        }
+
+        function updatePairsList() {
+            const list = document.getElementById('pairsList');
+            if (gameData.pairs.length === 0) {
+                list.innerHTML = '<div class="empty-message">Sin parejas todavía. Genera las parejas primero.</div>';
+                return;
+            }
+
+            list.innerHTML = gameData.pairs.map(pair => `
+                <div class="pair-item">
+                    <strong>${pair.player1.name}</strong> ${pair.player1.gender === 'male' ? '👨' : '👩'} 
+                    & 
+                    ${pair.player2 ? `<strong>${pair.player2.name}</strong> ${pair.player2.gender === 'male' ? '👨' : '👩'}` : '<em style="color: #999;">(SIN PAREJA)</em>'}
                 </div>
             `).join('');
         }
 
-        // Generar parejas (con password)
-        function solicitarPassword(accion) {
-            if (accion === 'generarParejas' && estado.jugadores.length < 2) {
-                alert('Necesitas al menos 2 jugadores para hacer parejas');
-                return;
-            }
-            if (accion === 'generarEmparejamientos' && estado.parejas.length === 0) {
-                alert('Necesitas parejas generadas primero');
+        function updateMatchesList() {
+            const list = document.getElementById('matchesList');
+            if (gameData.matches.length === 0) {
+                list.innerHTML = '<div class="empty-message">Los partidos aparecerán aquí una vez generes los emparejamientos.</div>';
                 return;
             }
 
-            accionPendiente = accion;
-            document.getElementById('passwordModal').classList.add('active');
-            document.getElementById('passwordInput').focus();
-            document.getElementById('passwordInput').value = '';
-        }
-
-        function confirmarPassword() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === PASSWORD) {
-                if (typeof accionPendiente === 'string') {
-                    // Acciones simples (string)
-                    if (accionPendiente === 'generarParejas') {
-                        generarParejas();
-                    } else if (accionPendiente === 'generarEmparejamientos') {
-                        generarEmparejamientos();
-                    }
-                } else if (typeof accionPendiente === 'object') {
-                    // Acciones complejas (object)
-                    if (accionPendiente.tipo === 'agregarJugador') {
-                        ejecutarAgregarJugador(accionPendiente.nombre, accionPendiente.genero);
-                    } else if (accionPendiente.tipo === 'eliminarJugador') {
-                        ejecutarEliminarJugador(accionPendiente.id);
-                    }
-                }
-                cancelarPassword();
-            } else {
-                alert('❌ Contraseña incorrecta');
-                document.getElementById('passwordInput').value = '';
-            }
-        }
-
-        function cancelarPassword() {
-            document.getElementById('passwordModal').classList.remove('active');
-            accionPendiente = null;
-        }
-
-        // Generar parejas aleatorias
-        function generarParejas() {
-            if (estado.jugadores.length < 2) {
-                alert('Necesitas al menos 2 jugadores');
-                return;
-            }
-
-            let jugadores = [...estado.jugadores].sort(() => Math.random() - 0.5);
-            estado.parejas = [];
-
-            // Algoritmo: intenta evitar dos mujeres juntas
-            for (let i = 0; i < jugadores.length - 1; i += 2) {
-                let j1 = jugadores[i];
-                let j2 = jugadores[i + 1];
-
-                // Si ambas son mujeres, intenta intercambiar
-                if (j1.genero === 'M' && j2.genero === 'M' && i + 2 < jugadores.length) {
-                    // Busca un hombre cercano para intercambiar
-                    for (let k = i + 2; k < jugadores.length; k++) {
-                        if (jugadores[k].genero === 'H') {
-                            [j2, jugadores[k]] = [jugadores[k], j2];
-                            break;
-                        }
-                    }
+            list.innerHTML = gameData.matches.map((match, idx) => {
+                const pair1Name = match.pair1.player1.name + ' & ' + (match.pair1.player2 ? match.pair1.player2.name : '');
+                const pair2Name = match.pair2.player1.name + ' & ' + (match.pair2.player2 ? match.pair2.player2.name : '');
+                
+                let resultDisplay = `<span class="match-result">⏳ Sin resultados</span>`;
+                let resultClass = '';
+                
+                if (match.finished) {
+                    const winner = match.sets1 > match.sets2 ? 'Pareja 1' : 'Pareja 2';
+                    resultDisplay = `<span class="match-result finished">✅ ${match.sets1} - ${match.sets2}</span>`;
+                    resultClass = ' finished';
                 }
 
-                estado.parejas.push({
-                    id: Date.now() + Math.random(),
-                    jugadores: [j1, j2]
-                });
-            }
-
-            // Si hay un jugador impar
-            if (jugadores.length % 2 === 1) {
-                estado.parejas.push({
-                    id: Date.now() + Math.random(),
-                    jugadores: [jugadores[jugadores.length - 1]]
-                });
-            }
-
-            guardarDatos();
-            actualizarParejas();
-            alert('✅ Parejas generadas correctamente');
-        }
-
-        function actualizarParejas() {
-            const contenedor = document.getElementById('parejas');
-            if (estado.parejas.length === 0) {
-                contenedor.innerHTML = '<div class="empty-state">Sin parejas todavía. Genera las parejas primero.</div>';
-                return;
-            }
-
-            contenedor.innerHTML = estado.parejas.map((pareja, idx) => `
-                <div class="pareja-card">
-                    <h3>Pareja ${idx + 1}</h3>
-                    <p>${pareja.jugadores.map(j => `${j.nombre} (${j.genero})`).join(' + ')}</p>
-                </div>
-            `).join('');
-        }
-
-        // Generar emparejamientos (partidos)
-        function generarEmparejamientos() {
-            if (estado.parejas.length < 2) {
-                alert('Necesitas al menos 2 parejas');
-                return;
-            }
-
-            let parejas = [...estado.parejas].sort(() => Math.random() - 0.5);
-            estado.partidos = [];
-
-            // Crear partidos (pareja vs pareja)
-            for (let i = 0; i < parejas.length - 1; i += 2) {
-                estado.partidos.push({
-                    id: Date.now() + Math.random(),
-                    pareja1: parejas[i],
-                    pareja2: parejas[i + 1],
-                    fase: 'grupos',
-                    jornada: Math.floor(i / 2) + 1
-                });
-            }
-
-            guardarDatos();
-            mostrarPartidos();
-            alert('✅ Emparejamientos generados correctamente');
-        }
-
-        function mostrarPartidos() {
-            const contenedor = document.getElementById('contenedorPartidos');
-            if (estado.partidos.length === 0) {
-                contenedor.innerHTML = '<div class="empty-state">Los partidos aparecerán aquí una vez generes los emparejamientos.</div>';
-                return;
-            }
-
-            const grupos = {};
-            estado.partidos.forEach(partido => {
-                if (!grupos[partido.jornada]) {
-                    grupos[partido.jornada] = [];
-                }
-                grupos[partido.jornada].push(partido);
-            });
-
-            let html = '<div class="fase"><h3>⚽ Fase de Grupos</h3><div class="partidos-grid">';
-            
-            Object.keys(grupos).sort((a, b) => a - b).forEach(jornada => {
-                html += grupos[jornada].map(partido => {
-                    const nombres1 = partido.pareja1.jugadores.map(j => j.nombre).join(' + ');
-                    const nombres2 = partido.pareja2.jugadores.map(j => j.nombre).join(' + ');
-                    return `
-                        <div class="partido-card">
-                            <h4>Jornada ${jornada}</h4>
-                            <div>${nombres1}</div>
-                            <div class="vs">VS</div>
-                            <div>${nombres2}</div>
+                return `
+                    <div class="match-item${resultClass}">
+                        <div class="match-with-result">
+                            <div class="match-info">
+                                <strong>Partido ${idx + 1}:</strong><br>
+                                <strong>🔵 Pareja 1:</strong> ${pair1Name}<br>
+                                <strong>🔴 Pareja 2:</strong> ${pair2Name}
+                            </div>
+                            <div class="match-actions">
+                                ${resultDisplay}
+                                <button class="match-button warning" onclick="registerResult(${match.id})">📊 ${match.finished ? 'Editar' : 'Resultado'}</button>
+                            </div>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateRanking() {
+            const body = document.getElementById('rankingBody');
+            
+            if (gameData.pairs.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #aaa; padding: 20px;">Genera los emparejamientos para ver la clasificación</td></tr>`;
+                return;
+            }
+
+            // Calcular puntos por pareja
+            const pairsPoints = {};
+            gameData.pairs.forEach(pair => {
+                const pairKey = pair.player1.name + ' & ' + (pair.player2 ? pair.player2.name : 'SIN PAREJA');
+                pairsPoints[pairKey] = 0;
             });
 
-            html += '</div></div>';
-            contenedor.innerHTML = html;
-        }
+            gameData.matches.forEach(match => {
+                if (match.finished) {
+                    const pair1Key = match.pair1.player1.name + ' & ' + (match.pair1.player2 ? match.pair1.player2.name : 'SIN PAREJA');
+                    const pair2Key = match.pair2.player1.name + ' & ' + (match.pair2.player2 ? match.pair2.player2.name : 'SIN PAREJA');
 
-        function limpiarTodo() {
-            if (confirm('¿Estás seguro de que quieres limpiar todo?')) {
-                estado = {
-                    jugadores: [],
-                    parejas: [],
-                    partidos: []
-                };
-                guardarDatos();
-                actualizarUI();
-                document.getElementById('contenedorPartidos').innerHTML = '<div class="empty-state">Los partidos aparecerán aquí una vez generes los emparejamientos.</div>';
+                    if (match.sets1 > match.sets2) {
+                        pairsPoints[pair1Key] += 3;
+                        pairsPoints[pair2Key] += 1;
+                    } else {
+                        pairsPoints[pair2Key] += 3;
+                        pairsPoints[pair1Key] += 1;
+                    }
+                }
+            });
+
+            // Ordenar por puntos
+            const ranking = Object.entries(pairsPoints)
+                .map(([name, points]) => ({ name, points }))
+                .sort((a, b) => b.points - a.points);
+
+            if (ranking.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #aaa; padding: 20px;">Sin datos</td></tr>`;
+                return;
             }
+
+            body.innerHTML = ranking.map((item, idx) => `
+                <tr>
+                    <td><span class="ranking-position">${idx + 1}</span></td>
+                    <td>${item.name}</td>
+                    <td style="text-align: center; font-weight: 600;">${item.points}</td>
+                </tr>
+            `).join('');
         }
 
-        // Cargar datos al iniciar
-        cargarDatos();
+        // Mostrar mensajes
+        function showSuccess(msg) {
+            const el = document.getElementById('successMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3500);
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3500);
+        }
+
+        // Iniciar
+        loadData();
     </script>
 </body>
+
 </html>
