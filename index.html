@@ -126,11 +126,11 @@ input[type=file]{display:none}
 <div class="section">
 <h2>💾 Backup & Restauración</h2>
 <div class="backup">
-<p class="hint" style="font-weight:500;color:#333">📥 Copia de seguridad protegida por contraseña:</p>
+<p class="hint" style="font-weight:500;color:#333">📥 Copia de seguridad (se descarga como index.html) protegida por contraseña:</p>
 <div class="button-group">
 <button class="success" onclick="guard(openDownload)">📥 Descargar Backup</button>
 <label class="file-label" for="restoreFile" onclick="return unlockedOrAsk(event)">📤 Restaurar Archivo</label>
-<input type="file" id="restoreFile" accept=".backup,.json,application/json">
+<input type="file" id="restoreFile" accept=".html,.htm,.backup,.json">
 </div>
 </div>
 </div>
@@ -174,7 +174,7 @@ input[type=file]{display:none}
    CONFIGURACIÓN
    Pega aquí la URL de tu Firebase Realtime Database.
    Ejemplo: "https://mi-torneo-default-rtdb.europe-west1.firebasedatabase.app/torneo.json"
-   Si lo dejas vacío la web funciona, pero SOLO en tu navegador (sin compartir).
+   Es lo que hace que todos vean los mismos datos.
    ============================================================ */
 const DB_URL = "";
 const APP_PASSWORD = "BodaNyM";
@@ -236,6 +236,15 @@ const initialPlayers = [
   { id: 1790970729647, name: "Dani Pichel", gender: "male" }
 ];
 
+const BACKUP_DATA = null; // @@BACKUP@@
+
+function initialData() {
+  if (BACKUP_DATA) {
+    try { return normalize(JSON.parse(atob(BACKUP_DATA.data))); } catch (e) {}
+  }
+  return { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [] };
+}
+
 let gameData = { players: [], pairs: [], matches: [] };
 let unlocked = false, passResolve = null;
 let isSaving = 0, saveVersion = 0, lastRemote = "";
@@ -262,15 +271,15 @@ const showOk = t => flash('okMsg', t);
 const showErr = t => flash('errMsg', t);
 
 function setStatus(ok, text) {
-  const el = $('syncStatus'); el.textContent = text; el.className = 'sync' + (ok ? '' : ' off');
+  const el = $('syncStatus'); el.textContent = text; el.className = 'sync' + (ok ? '' : ' off'); el.style.display = text ? '' : 'none';
 }
 
 /* ---------- Sincronización ---------- */
 async function loadData() {
   if (!cloud()) {
-    setStatus(false, '🔴 Modo local: no sincronizado (falta configurar DB_URL)');
+    setStatus(true, '');
     const saved = localStorage.getItem('padelTournament');
-    gameData = saved ? normalize(JSON.parse(saved)) : { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [] };
+    gameData = saved ? normalize(JSON.parse(saved)) : initialData();
     render(); return;
   }
   try {
@@ -278,7 +287,7 @@ async function loadData() {
     if (remote && remote.players) {
       gameData = normalize(remote); lastRemote = JSON.stringify(gameData);
     } else {
-      gameData = { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [] };
+      gameData = initialData();
       await saveData();
     }
     setStatus(true, '🟢 Sincronizado · ' + new Date().toLocaleTimeString());
@@ -477,22 +486,40 @@ function render() {
 
 /* ---------- Backup ---------- */
 function openDownload() { $('dlPass').value = ''; $('dlPass2').value = ''; $('downloadModal').classList.add('show'); $('dlPass').focus(); }
-function confirmDownload() {
+async function confirmDownload() {
   const a = $('dlPass').value, b = $('dlPass2').value;
   if (!a) return showErr('Introduce una contraseña.');
   if (a !== b) return showErr('Las contraseñas no coinciden.');
+  let src;
+  try {
+    const res = await fetch(location.href.split('#')[0].split('?')[0], { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    src = await res.text();
+  } catch (e) { return showErr('No se pudo generar el backup (abre la web publicada, no el archivo local).'); }
   const json = JSON.stringify(gameData).replace(/[\u0100-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
-  const backup = { version: 1, timestamp: new Date().toISOString(), data: btoa(json), password: btoa(a) };
-  const url = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'torneo-padel-backup-' + Date.now() + '_backup.json'; link.click();
-  URL.revokeObjectURL(url); closeModal('downloadModal'); showOk('Backup descargado.');
+  const blob = JSON.stringify({ v: 1, timestamp: new Date().toISOString(), data: btoa(json), password: btoa(a) });
+  const marker = new RegExp('const BACKUP_DATA = .*?; // @@' + 'BACKUP@@');
+  if (!marker.test(src)) return showErr('No se encontró el marcador de backup en el archivo.');
+  src = src.replace(marker, () => 'const BACKUP_DATA = ' + blob + '; // @@' + 'BACKUP@@');
+  const url = URL.createObjectURL(new Blob([src], { type: 'text/html' }));
+  const link = document.createElement('a'); link.href = url; link.download = 'index.html'; link.click();
+  URL.revokeObjectURL(url); closeModal('downloadModal'); showOk('Backup descargado como index.html');
 }
 $('restoreFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = () => {
-    try { pendingRestore = JSON.parse(r.result); if (!pendingRestore.data || !pendingRestore.password) throw 0; }
-    catch (err) { showErr('Archivo de backup no válido.'); pendingRestore = null; return; }
+    try {
+      const t = r.result.trim();
+      if (t.startsWith('{')) pendingRestore = JSON.parse(t);
+      else {
+        const m = t.match(new RegExp('const BACKUP_DATA = (\\{.*?\\}); // @@' + 'BACKUP@@'));
+        if (!m) throw 0;
+        pendingRestore = JSON.parse(m[1]);
+      }
+      if (!pendingRestore.data || !pendingRestore.password) throw 0;
+    }
+    catch (err) { showErr('Ese archivo no contiene un backup válido.'); pendingRestore = null; return; }
     $('rsPass').value = ''; $('restoreModal').classList.add('show'); $('rsPass').focus();
   };
   r.readAsText(f); e.target.value = '';
