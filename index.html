@@ -563,9 +563,10 @@
         <!-- SECCIÓN 1: Jugadores & Parejas -->
         <div class="section">
             <h2>👥 Jugadores & Parejas</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Los 36 jugadores ya están cargados. Puedes agregar más si lo necesitas, o generar parejas directamente.</p>
 
             <div class="form-group">
-                <input type="text" id="playerName" placeholder="Nombre del jugador" autocomplete="off">
+                <input type="text" id="playerName" placeholder="Nombre del jugador (opcional)" autocomplete="off">
                 <select id="playerGender">
                     <option value="">-- Selecciona --</option>
                     <option value="male">👨 Hombre</option>
@@ -592,7 +593,7 @@
             <ul class="player-list" id="playerList"></ul>
 
             <div class="button-group" style="margin-top: 12px;">
-                <button onclick="requestPassword('generatePairs')">🔀 Generar Parejas (Aleatorio)</button>
+                <button class="success" onclick="requestPassword('generatePairs')">🔀 Generar Parejas (Aleatorio)</button>
                 <button class="danger" onclick="requestPassword('clearAllPlayers')">🗑️ Limpiar Todo</button>
             </div>
         </div>
@@ -600,12 +601,15 @@
         <!-- SECCIÓN 2: Emparejamientos -->
         <div class="section">
             <h2>⚔️ Emparejamientos</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Aquí veras las parejas que enfrentarán. Puedes eliminar parejas muy fuertes/débiles y re-sortear.</p>
             <div class="pairs-list" id="pairsList">
-                <div class="empty-message">Sin parejas todavía. Genera las parejas primero.</div>
+                <div class="empty-message">Sin parejas todavía. Genera las parejas primero en la sección anterior.</div>
             </div>
             <div class="button-group" style="margin-top: 12px;">
-                <button onclick="requestPassword('generateMatches')">⚔️ Generar Emparejamientos</button>
+                <button class="success" onclick="requestPassword('generateMatches')">⚔️ Generar Emparejamientos</button>
                 <button class="warning" onclick="viewMatches()">👀 Ver Partidos</button>
+                <button class="danger" onclick="cleanIncompletePairs()">🧹 Limpiar Incompletas</button>
+                <button onclick="resetPairs()" style="background: #6c757d;">↩️ Resetear Parejas</button>
             </div>
         </div>
 
@@ -834,19 +838,30 @@
             }
 
             // Ejecutar acción
-            switch (pendingAction) {
-                case 'addPlayer':
-                    executeAddPlayer();
-                    break;
-                case 'generatePairs':
-                    executeGeneratePairs();
-                    break;
-                case 'generateMatches':
-                    executeGenerateMatches();
-                    break;
-                case 'clearAllPlayers':
-                    executeClearAllPlayers();
-                    break;
+            if (typeof pendingAction === 'string') {
+                switch (pendingAction) {
+                    case 'addPlayer':
+                        executeAddPlayer();
+                        break;
+                    case 'generatePairs':
+                        executeGeneratePairs();
+                        break;
+                    case 'generateMatches':
+                        executeGenerateMatches();
+                        break;
+                    case 'clearAllPlayers':
+                        executeClearAllPlayers();
+                        break;
+                }
+            } else if (pendingAction && typeof pendingAction === 'object') {
+                switch (pendingAction.type) {
+                    case 'removePlayer':
+                        executeRemovePlayer();
+                        break;
+                    case 'removePair':
+                        executeRemovePair();
+                        break;
+                }
             }
 
             cancelPassword();
@@ -903,42 +918,123 @@
             }
         }
 
-        // Generar parejas
+        // Generar parejas con validación (no 2 mujeres juntas)
         function executeGeneratePairs() {
             if (gameData.players.length < 2) {
                 showError('Necesitas al menos 2 jugadores.');
                 return;
             }
 
-            const shuffled = [...gameData.players].sort(() => Math.random() - 0.5);
-            gameData.pairs = [];
+            let validPairs = false;
+            let attempts = 0;
+            const maxAttempts = 50;
 
-            for (let i = 0; i < shuffled.length - 1; i += 2) {
-                gameData.pairs.push({
-                    id: Date.now() + i,
-                    player1: shuffled[i],
-                    player2: shuffled[i + 1]
-                });
+            while (!validPairs && attempts < maxAttempts) {
+                attempts++;
+                const shuffled = [...gameData.players].sort(() => Math.random() - 0.5);
+                gameData.pairs = [];
+                validPairs = true;
+
+                // Crear parejas
+                for (let i = 0; i < shuffled.length - 1; i += 2) {
+                    const p1 = shuffled[i];
+                    const p2 = shuffled[i + 1];
+
+                    // VALIDACIÓN: No permitir 2 mujeres juntas
+                    if (p1.gender === 'female' && p2.gender === 'female') {
+                        validPairs = false;
+                        break;
+                    }
+
+                    gameData.pairs.push({
+                        id: Date.now() + i,
+                        player1: p1,
+                        player2: p2
+                    });
+                }
+
+                // Si hay jugador impar
+                if (shuffled.length % 2 !== 0) {
+                    gameData.pairs.push({
+                        id: Date.now() + shuffled.length,
+                        player1: shuffled[shuffled.length - 1],
+                        player2: null
+                    });
+                }
             }
 
-            if (shuffled.length % 2 !== 0) {
-                gameData.pairs.push({
-                    id: Date.now() + shuffled.length,
-                    player1: shuffled[shuffled.length - 1],
-                    player2: null
-                });
+            if (!validPairs) {
+                showError('❌ No se pudo generar parejas válidas. Intenta de nuevo.');
+                return;
             }
 
             gameData.matches = [];
             saveData();
             updateUI();
-            showSuccess('Parejas generadas: ' + gameData.pairs.length + ' parejas');
+            showSuccess('✅ Parejas generadas: ' + gameData.pairs.length + ' parejas (sin 2 mujeres juntas)');
+        }
+
+        // Eliminar pareja
+        function removePair(pairId) {
+            const pair = gameData.pairs.find(p => p.id === pairId);
+            if (!pair) return;
+
+            const pairName = pair.player1.name + ' & ' + (pair.player2 ? pair.player2.name : '');
+            gameData.pairs = gameData.pairs.filter(p => p.id !== pairId);
+            gameData.matches = []; // Limpiar emparejamientos también
+            saveData();
+            updateUI();
+            showSuccess('✅ Pareja eliminada: ' + pairName + '. Generadores un nuevo sorteo cuando estés listo.');
+        }
+
+        // Ejecutar eliminación de pareja
+        function executeRemovePair() {
+            if (!pendingAction || !pendingAction.pairId) return;
+            removePair(pendingAction.pairId);
+        }
+
+        // Limpiar parejas incompletas (sin segundo jugador)
+        function cleanIncompletePairs() {
+            const incompletePairs = gameData.pairs.filter(p => !p.player2);
+            
+            if (incompletePairs.length === 0) {
+                showSuccess('✅ No hay parejas incompletas. Todas están completas.');
+                return;
+            }
+
+            const names = incompletePairs.map(p => p.player1.name).join(', ');
+            
+            if (confirm(`¿Eliminar ${incompletePairs.length} pareja(s) incompleta(s)?\n\nJugadores sin pareja:\n${names}`)) {
+                gameData.pairs = gameData.pairs.filter(p => p.player2);
+                gameData.matches = [];
+                saveData();
+                updateUI();
+                showSuccess('✅ Se eliminaron ' + incompletePairs.length + ' parejas incompletas.');
+            }
+        }
+        
+        // Resetear todas las parejas y volver atrás
+        function resetPairs() {
+            if (confirm('⚠️ ¿Resetear TODAS las parejas y emparejamientos?\n\nVolverás al punto de generar parejas nuevas.')) {
+                gameData.pairs = [];
+                gameData.matches = [];
+                saveData();
+                updateUI();
+                showSuccess('✅ Parejas reseteadas. Puedes generar nuevas parejas.');
+            }
         }
 
         // Generar emparejamientos
         function executeGenerateMatches() {
+            console.log('executeGenerateMatches llamado. Parejas:', gameData.pairs.length);
+            
+            if (!gameData.pairs || gameData.pairs.length === 0) {
+                showError('❌ No hay parejas. Genera las parejas primero.');
+                return;
+            }
+
             if (gameData.pairs.length < 2) {
-                showError('Necesitas al menos 2 parejas para generar emparejamientos.');
+                showError('❌ Necesitas al menos 2 parejas para generar emparejamientos. Tienes: ' + gameData.pairs.length);
                 return;
             }
 
@@ -958,9 +1054,19 @@
                 }
             }
 
+            if (gameData.matches.length === 0) {
+                showError('❌ No se pudieron crear emparejamientos.');
+                return;
+            }
+
             saveData();
             updateUI();
-            showSuccess('Emparejamientos generados: ' + gameData.matches.length + ' partidos');
+            showSuccess('✅ Emparejamientos generados: ' + gameData.matches.length + ' partidos');
+            
+            // Auto-scroll a los partidos
+            setTimeout(() => {
+                document.querySelector('.matches-list').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
         }
 
         // Ver partidos
@@ -1130,11 +1236,13 @@
 
         // Actualizar UI
         function updateUI() {
+            console.log('updateUI llamado');
             updatePlayerList();
             updateStats();
             updatePairsList();
             updateMatchesList();
             updateRanking();
+            console.log('updateUI finalizado');
         }
 
         function updatePlayerList() {
@@ -1170,13 +1278,33 @@
                 return;
             }
 
-            list.innerHTML = gameData.pairs.map(pair => `
-                <div class="pair-item">
-                    <strong>${pair.player1.name}</strong> ${pair.player1.gender === 'male' ? '👨' : '👩'} 
-                    & 
-                    ${pair.player2 ? `<strong>${pair.player2.name}</strong> ${pair.player2.gender === 'male' ? '👨' : '👩'}` : '<em style="color: #999;">(SIN PAREJA)</em>'}
-                </div>
-            `).join('');
+            const incompletePairs = gameData.pairs.filter(p => !p.player2).length;
+            const completePairs = gameData.pairs.filter(p => p.player2).length;
+
+            let html = '';
+            
+            if (incompletePairs > 0) {
+                html += `<div class="empty-message" style="background: #fff3cd; color: #856404; border-bottom: 1px solid #ffc107;">⚠️ Hay ${incompletePairs} pareja(s) incompleta(s). Usa "Limpiar Incompletas" para eliminarlas.</div>`;
+            }
+
+            html += gameData.pairs.map(pair => {
+                const isIncomplete = !pair.player2;
+                const bgColor = isIncomplete ? '#fff3cd' : '#f8f9fa';
+                const borderLeft = isIncomplete ? '#ffc107' : '#667eea';
+                
+                return `
+                    <div class="pair-item" style="display: flex; justify-content: space-between; align-items: center; background: ${bgColor}; border-left-color: ${borderLeft};">
+                        <div>
+                            <strong>${pair.player1.name}</strong> ${pair.player1.gender === 'male' ? '👨' : '👩'} 
+                            & 
+                            ${pair.player2 ? `<strong>${pair.player2.name}</strong> ${pair.player2.gender === 'male' ? '👨' : '👩'}` : '<em style="color: #ff6b6b;">❌ SIN PAREJA</em>'}
+                        </div>
+                        <button class="match-button danger" onclick="requestPassword('removePair'); pendingAction = { type: 'removePair', pairId: ${pair.id} };" style="flex-shrink: 0;">🗑️ Eliminar</button>
+                    </div>
+                `;
+            }).join('');
+
+            list.innerHTML = html;
         }
 
         function updateMatchesList() {
