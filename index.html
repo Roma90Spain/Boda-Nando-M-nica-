@@ -82,7 +82,7 @@ input[type=file]{display:none}
 
 <div class="section">
 <h2>👥 Jugadores</h2>
-<p class="hint">Todos ven la misma lista en tiempo real. Para modificar hace falta la contraseña.</p>
+<p class="hint">Todos ven la misma lista (se actualiza sola cada 30 s). Para modificar hace falta la contraseña.</p>
 <div class="form-group">
 <input type="text" id="playerName" placeholder="Nombre del jugador" autocomplete="off">
 <select id="playerGender"><option value="">-- Selecciona --</option><option value="male">👨 Hombre</option><option value="female">👩 Mujer</option></select>
@@ -136,6 +136,13 @@ input[type=file]{display:none}
 </div>
 </div>
 
+<div id="tokenModal" class="modal"><div class="modal-content">
+<div class="modal-header">🔑 Token de GitHub (solo la 1ª vez)</div>
+<p class="modal-text">Para que tus cambios los vean todos, esta web los guarda en tu repositorio de GitHub. Crea un token en GitHub → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token. Acceso solo a este repositorio y permiso <b>Contents: Read and write</b>. Pégalo aquí; se guarda solo en este navegador.</p>
+<input type="password" class="modal-input" id="tokenInput" placeholder="github_pat_..." onkeypress="if(event.key==='Enter')confirmToken()">
+<div class="modal-buttons"><button style="background:#aaa" onclick="cancelToken()">✗ Ahora no</button><button class="success" onclick="confirmToken()">✓ Guardar</button></div>
+</div></div>
+
 <div id="passwordModal" class="modal"><div class="modal-content">
 <div class="modal-header">🔐 Contraseña</div>
 <p class="modal-text">Introduce la contraseña para realizar esta acción:</p>
@@ -172,13 +179,15 @@ input[type=file]{display:none}
 <script>
 /* ============================================================
    CONFIGURACIÓN
-   Pega aquí la URL de tu Firebase Realtime Database.
-   Ejemplo: "https://mi-torneo-default-rtdb.europe-west1.firebasedatabase.app/torneo.json"
-   Es lo que hace que todos vean los mismos datos.
+   Los datos compartidos se guardan en el propio repositorio de GitHub,
+   en el archivo data.json. Todos lo leen; solo quien tenga el token
+   (el organizador) puede publicar cambios.
    ============================================================ */
-const DB_URL = "";
+const GH = { owner: 'Roma90Spain', repo: 'Boda-Nando-M-nica-', branch: 'main', file: 'data.json' };
+const STORE_KEY = 'padelTournamentV2';
+const TOKEN_KEY = 'padelGhToken';
 const APP_PASSWORD = "BodaNyM";
-const POLL_MS = 4000;
+const POLL_MS = 30000;
 
 const initialPlayers = [
   { id: 1790364897912, name: "Alvaro", gender: "male" },
@@ -242,22 +251,21 @@ function initialData() {
   if (BACKUP_DATA) {
     try { return normalize(JSON.parse(atob(BACKUP_DATA.data))); } catch (e) {}
   }
-  return { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [] };
+  return { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [], updatedAt: 0 };
 }
 
 let gameData = { players: [], pairs: [], matches: [] };
 let unlocked = false, passResolve = null;
-let isSaving = 0, saveVersion = 0, lastRemote = "";
+let publishTimer = null, publishing = false, publishAgain = false, tokenResolve = null;
 let resultMatchId = null, pendingRestore = null;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const cloud = () => !!DB_URL;
 
 function normalize(d) {
   d = d || {};
   const arr = v => Array.isArray(v) ? v.filter(Boolean) : Object.values(v || {});
-  return { players: arr(d.players), pairs: arr(d.pairs), matches: arr(d.matches) };
+  return { players: arr(d.players), pairs: arr(d.pairs), matches: arr(d.matches), updatedAt: Number(d.updatedAt) || 0 };
 }
 
 /* ---------- Mensajes ---------- */
@@ -274,57 +282,100 @@ function setStatus(ok, text) {
   const el = $('syncStatus'); el.textContent = text; el.className = 'sync' + (ok ? '' : ' off'); el.style.display = text ? '' : 'none';
 }
 
-/* ---------- Sincronización ---------- */
+/* ---------- Sincronización (GitHub) ---------- */
+const nowStr = () => new Date().toLocaleTimeString();
+const toB64 = str => { let bin = ''; new TextEncoder().encode(str).forEach(c => bin += String.fromCharCode(c)); return btoa(bin); };
+
+async function fetchRemote() {
+  const res = await fetch(GH.file + '?t=' + Date.now(), { cache: 'no-store' });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(res.status);
+  return normalize(await res.json());
+}
+
 async function loadData() {
-  if (!cloud()) {
-    setStatus(true, '');
-    const saved = localStorage.getItem('padelTournament');
-    gameData = saved ? normalize(JSON.parse(saved)) : initialData();
-    render(); return;
-  }
-  try {
-    const remote = await (await fetch(DB_URL, { cache: 'no-store' })).json();
-    if (remote && remote.players) {
-      gameData = normalize(remote); lastRemote = JSON.stringify(gameData);
-    } else {
-      gameData = initialData();
-      await saveData();
-    }
-    setStatus(true, '🟢 Sincronizado · ' + new Date().toLocaleTimeString());
-  } catch (e) {
-    setStatus(false, '🔴 Sin conexión con la base de datos');
-  }
+  let local = null, remote = null;
+  try { const sv = localStorage.getItem(STORE_KEY); if (sv) local = normalize(JSON.parse(sv)); } catch (e) {}
+  try { remote = await fetchRemote(); setStatus(true, '🟢 Actualizado · ' + nowStr()); }
+  catch (e) { setStatus(false, '🔴 Sin conexión: se muestra la última copia'); }
+  const best = [remote, local].filter(Boolean).sort((x, y) => y.updatedAt - x.updatedAt)[0];
+  gameData = best || initialData();
   render();
+  if (local && remote && local.updatedAt > remote.updatedAt && localStorage.getItem(TOKEN_KEY)) schedulePublish();
   setInterval(poll, POLL_MS);
 }
 
 async function poll() {
-  if (isSaving) return;
-  const v = saveVersion;
+  if (publishing || publishTimer) return;
   try {
-    const remote = await (await fetch(DB_URL, { cache: 'no-store' })).json();
-    if (isSaving || v !== saveVersion) return;
-    setStatus(true, '🟢 Sincronizado · ' + new Date().toLocaleTimeString());
-    if (!remote || !remote.players) return;
-    const norm = normalize(remote), str = JSON.stringify(norm);
-    if (str !== lastRemote) { lastRemote = str; gameData = norm; render(); }
+    const remote = await fetchRemote();
+    setStatus(true, '🟢 Actualizado · ' + nowStr());
+    if (remote && remote.updatedAt > (gameData.updatedAt || 0)) {
+      gameData = remote; localStorage.setItem(STORE_KEY, JSON.stringify(gameData)); render();
+    }
   } catch (e) { setStatus(false, '🔴 Sin conexión, reintentando…'); }
 }
 
-async function saveData() {
-  localStorage.setItem('padelTournament', JSON.stringify(gameData));
-  if (!cloud()) return;
-  saveVersion++; isSaving++;
-  try {
-    const res = await fetch(DB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gameData) });
-    if (!res.ok) throw new Error(res.status);
-    lastRemote = JSON.stringify(normalize(gameData));
-    setStatus(true, '🟢 Guardado · ' + new Date().toLocaleTimeString());
-  } catch (e) {
-    showErr('⚠️ No se pudo guardar en la nube. Revisa la conexión o las reglas de Firebase.');
-    setStatus(false, '🔴 Error al guardar');
-  } finally { isSaving--; }
+function saveData() {
+  gameData.updatedAt = Date.now();
+  localStorage.setItem(STORE_KEY, JSON.stringify(gameData));
+  schedulePublish();
 }
+
+function schedulePublish() {
+  clearTimeout(publishTimer);
+  setStatus(true, '⏳ Publicando cambios…');
+  publishTimer = setTimeout(() => { publishTimer = null; publish(); }, 1200);
+}
+
+async function publish() {
+  if (publishing) { publishAgain = true; return; }
+  let token = localStorage.getItem(TOKEN_KEY);
+  if (!token) {
+    if (!(await askToken())) { setStatus(false, '🔴 Cambios solo en este dispositivo (falta el token)'); return; }
+    token = localStorage.getItem(TOKEN_KEY);
+  }
+  publishing = true;
+  try { await pushToGithub(token); }
+  catch (e) {
+    if (e && e.auth) { localStorage.removeItem(TOKEN_KEY); showErr('❌ Token no válido o sin permisos de escritura. Se pedirá de nuevo al guardar.'); }
+    else showErr('⚠️ No se pudo publicar. Revisa la conexión.');
+    setStatus(false, '🔴 Error al publicar');
+  } finally {
+    publishing = false;
+    if (publishAgain) { publishAgain = false; publish(); }
+  }
+}
+
+async function pushToGithub(token) {
+  const api = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.file}`;
+  const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let sha;
+    const g = await fetch(api + '?ref=' + GH.branch + '&t=' + Date.now(), { headers, cache: 'no-store' });
+    if (g.status === 200) sha = (await g.json()).sha;
+    else if (g.status === 401 || g.status === 403) throw { auth: true };
+    else if (g.status !== 404) throw new Error(g.status);
+    const body = { message: 'Actualización del torneo', content: toB64(JSON.stringify(gameData)), branch: GH.branch };
+    if (sha) body.sha = sha;
+    const p = await fetch(api, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (p.ok) { setStatus(true, '🟢 Publicado · ' + nowStr() + ' (los demás lo verán en 1-2 min)'); return; }
+    if (p.status === 409 || p.status === 422) continue;
+    if (p.status === 401 || p.status === 403 || p.status === 404) throw { auth: true };
+    throw new Error(p.status);
+  }
+  throw new Error('conflicto');
+}
+
+function askToken() {
+  return new Promise(res => { tokenResolve = res; $('tokenInput').value = ''; $('tokenModal').classList.add('show'); $('tokenInput').focus(); });
+}
+function confirmToken() {
+  const t = $('tokenInput').value.trim();
+  if (t.length < 20) return showErr('Pega el token completo.');
+  localStorage.setItem(TOKEN_KEY, t); closeModal('tokenModal'); if (tokenResolve) tokenResolve(true); tokenResolve = null;
+}
+function cancelToken() { closeModal('tokenModal'); if (tokenResolve) tokenResolve(false); tokenResolve = null; }
 
 /* ---------- Contraseña ---------- */
 function askPassword() {
