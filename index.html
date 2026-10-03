@@ -64,6 +64,10 @@ input[type=file]{display:none}
 .msg{padding:10px 12px;border-radius:6px;margin-bottom:15px;font-size:13px;display:none}
 .msg.ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
 .msg.err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.gcard{border:2px solid #e0e6ff;border-radius:10px;padding:12px;margin-bottom:14px;background:#fafbff}
+.gcard h3{color:#667eea;font-size:16px;margin-bottom:6px}.gcard h3 small{color:#888;font-weight:400;font-size:12px}
+.gcard table{margin:6px 0 10px}.gcard th,.gcard td{padding:6px 8px}
+tr.q1{background:#e8f8ee}tr.q3{background:#fff6d6}
 @media (max-width:600px){
 .container{padding:15px}h1{font-size:22px}
 .form-group{flex-direction:column}.form-group input,.form-group select{width:100%}
@@ -113,23 +117,26 @@ input[type=file]{display:none}
 </div>
 
 <div class="section" id="matchesSection">
-<h2>📋 Partidos del Torneo</h2>
-<div class="list" id="matchesList"></div>
+<h2>📋 Fase de grupos</h2>
+<p class="hint">Cada pareja juega contra todas las de su grupo. Cada partido es un tie-break a 10 puntos. Pasan los 2 primeros de cada grupo (verde) y los 2 mejores terceros (amarillo).</p>
+<div id="matchesList"></div>
+<div id="thirdsBox"></div>
 </div>
 
-<div class="section">
-<h2>🏆 Clasificación</h2>
-<p class="hint">Victoria = 3 puntos. Desempate por diferencia de sets.</p>
-<table><thead><tr><th style="width:40px">Pos</th><th>Pareja</th><th style="width:50px">PJ</th><th style="width:50px">Pts</th></tr></thead><tbody id="rankingBody"></tbody></table>
+<div class="section" id="koSection">
+<h2>🏆 Octavos de final</h2>
+<p class="hint">16 parejas clasificadas. Partidos a 15 puntos.</p>
+<div class="button-group" style="margin-bottom:10px"><button class="success" onclick="guard(generateKO)">🏆 Generar Octavos</button></div>
+<div class="list" id="koList"></div>
 </div>
 
 <div class="section">
 <h2>💾 Backup & Restauración</h2>
 <div class="backup">
-<p class="hint" style="font-weight:500;color:#333">📥 Copia de seguridad (se descarga como index.html) protegida por contraseña:</p>
+<p class="hint" style="font-weight:500;color:#333">📥 Copia de seguridad (se descarga como index.html):</p>
 <div class="button-group">
-<button class="success" onclick="guard(openDownload)">📥 Descargar Backup</button>
-<label class="file-label" for="restoreFile" onclick="return unlockedOrAsk(event)">📤 Restaurar Archivo</label>
+<button class="success" onclick="downloadBackup()">📥 Descargar Backup</button>
+<label class="file-label" for="restoreFile">📤 Restaurar Archivo</label>
 <input type="file" id="restoreFile" accept=".html,.htm,.backup,.json">
 </div>
 </div>
@@ -154,26 +161,11 @@ input[type=file]{display:none}
 <div class="modal-header">📊 Registrar Resultado</div>
 <p class="modal-text" id="resultText"></p>
 <div class="result-form">
-<div class="result-group"><label id="pair1Label">Pareja 1 (Sets)</label><input type="number" id="sets1" min="0" max="2" value="0"></div>
-<div class="result-group"><label id="pair2Label">Pareja 2 (Sets)</label><input type="number" id="sets2" min="0" max="2" value="0"></div>
+<div class="result-group"><label id="pair1Label">Pareja 1</label><input type="number" id="sets1" min="0" max="30" value="0"></div>
+<div class="result-group"><label id="pair2Label">Pareja 2</label><input type="number" id="sets2" min="0" max="30" value="0"></div>
 </div>
-<p class="modal-text" style="color:#999;font-size:12px">Gana quien consiga 2 sets (mejor de 3).</p>
+<p class="modal-text" style="color:#999;font-size:12px" id="resultRule"></p>
 <div class="modal-buttons"><button style="background:#aaa" onclick="closeModal('resultModal')">✗ Cancelar</button><button class="success" onclick="saveResult()">✓ Guardar</button></div>
-</div></div>
-
-<div id="downloadModal" class="modal"><div class="modal-content">
-<div class="modal-header">🔐 Descargar Backup</div>
-<p class="modal-text">Establece una contraseña para proteger este backup:</p>
-<input type="password" class="modal-input" id="dlPass" placeholder="Contraseña">
-<input type="password" class="modal-input" id="dlPass2" placeholder="Confirmar contraseña" onkeypress="if(event.key==='Enter')confirmDownload()">
-<div class="modal-buttons"><button style="background:#aaa" onclick="closeModal('downloadModal')">✗ Cancelar</button><button class="success" onclick="confirmDownload()">✓ Descargar</button></div>
-</div></div>
-
-<div id="restoreModal" class="modal"><div class="modal-content">
-<div class="modal-header">🔓 Restaurar Backup</div>
-<p class="modal-text">Introduce la contraseña del backup. Esto sustituirá los datos de TODOS los usuarios.</p>
-<input type="password" class="modal-input" id="rsPass" placeholder="Contraseña" onkeypress="if(event.key==='Enter')confirmRestore()">
-<div class="modal-buttons"><button style="background:#aaa" onclick="cancelRestore()">✗ Cancelar</button><button class="success" onclick="confirmRestore()">✓ Restaurar</button></div>
 </div></div>
 
 <script>
@@ -195,7 +187,7 @@ const initialPlayers = [
   { id: 1790364897914, name: "José Manuel", gender: "male" },
   { id: 1790364897915, name: "Iñaki", gender: "male" },
   { id: 1790364897916, name: "Raúl Alicia", gender: "male" },
-  { id: 1790364897917, name: "Gabriel García", gender: "male" },
+  { id: 1790364897917, name: "Sobrino de Nando", gender: "male" },
   { id: 1790364897918, name: "Luismi", gender: "male" },
   { id: 1790364897919, name: "Neke", gender: "male" },
   { id: 1790364897920, name: "Sevi", gender: "male" },
@@ -241,20 +233,20 @@ const initialPlayers = [
   { id: 1790967539677, name: "Alejandro L", gender: "male" },
   { id: 1790969029279, name: "Carol L", gender: "female" },
   { id: 1790969041871, name: "Marcos D", gender: "male" },
-  { id: 1790970687974, name: "Bea Lázaro", gender: "female" },
+  { id: 1790970687974, name: "Corchu", gender: "female" },
   { id: 1790970729647, name: "Dani Pichel", gender: "male" }
 ];
 
-const BACKUP_DATA = null; // @@BACKUP@@
+const BACKUP_DATA = {"v":1,"timestamp":"2026-10-03T08:25:52.000Z","data":"eyJwbGF5ZXJzIjpbeyJpZCI6MTc5MDM2NDg5NzkxMiwibmFtZSI6IkFsdmFybyIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTEzLCJuYW1lIjoiRlx1MDBlOWxpeCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTE0LCJuYW1lIjoiSm9zXHUwMGU5IE1hbnVlbCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTE1LCJuYW1lIjoiSVx1MDBmMWFraSIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTE2LCJuYW1lIjoiUmFcdTAwZmFsIEFsaWNpYSIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTE3LCJuYW1lIjoiU29icmlubyBkZSBOYW5kbyIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTE4LCJuYW1lIjoiTHVpc21pIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MTksIm5hbWUiOiJOZWtlIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MjAsIm5hbWUiOiJTZXZpIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MjEsIm5hbWUiOiJDYXJsb3MgTW9udGlsbGEiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkyMywibmFtZSI6Ik1vcml0YSIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTI0LCJuYW1lIjoiTmFuZG8iLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkyNSwibmFtZSI6IlZcdTAwZWRjdG9yIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MjYsIm5hbWUiOiJDdXJpdGEiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkyNywibmFtZSI6IlNvdG8iLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkyOCwibmFtZSI6IlJ1Ylx1MDBlOW4iLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkyOSwibmFtZSI6IkFsZm9uc28iLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzMCwibmFtZSI6IkRhbmkgUm9qYXMiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzMSwibmFtZSI6Ik1hcmlvIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MzIsIm5hbWUiOiJBbGZvbnNvIE1vcmEiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzMywibmFtZSI6IkNyaXN0aWFuIEplbm55IiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5MzQsIm5hbWUiOiJKYXZpIENvbmVqbyIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTM1LCJuYW1lIjoiSm9yZ2UiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzNiwibmFtZSI6IlJhdWwiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzNywibmFtZSI6Ikpvc2V0ZSIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwMzY0ODk3OTM4LCJuYW1lIjoiRGluYW1pdGEiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDM2NDg5NzkzOSwibmFtZSI6IlZpcmdpbmlhIEpvcmdlIiwiZ2VuZGVyIjoiZmVtYWxlIn0seyJpZCI6MTc5MDM2NDg5Nzk0MCwibmFtZSI6IktpdHR5IiwiZ2VuZGVyIjoiZmVtYWxlIn0seyJpZCI6MTc5MDM2NDg5Nzk0MSwibmFtZSI6IkNyaXN0aW5hIiwiZ2VuZGVyIjoiZmVtYWxlIn0seyJpZCI6MTc5MDM2NDg5Nzk0MiwibmFtZSI6IkVsZW5hIiwiZ2VuZGVyIjoiZmVtYWxlIn0seyJpZCI6MTc5MDM2NDg5Nzk0MywibmFtZSI6IkV2YSIsImdlbmRlciI6ImZlbWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5NDUsIm5hbWUiOiJKZW5ueSIsImdlbmRlciI6ImZlbWFsZSJ9LHsiaWQiOjE3OTAzNjQ4OTc5NDcsIm5hbWUiOiJBbGljaWEgUHJpbWEiLCJnZW5kZXIiOiJmZW1hbGUifSx7ImlkIjoxNzkwOTY3MzI3MjczLCJuYW1lIjoiU2FudGkgUSIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3MzM5MzU3LCJuYW1lIjoiTWlyZXlhIiwiZ2VuZGVyIjoiZmVtYWxlIn0seyJpZCI6MTc5MDk2NzM2MzA0OSwibmFtZSI6IkNhcmxvcyBHIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTA5NjczNzY3MjYsIm5hbWUiOiJBbG9uc28gQiIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3MzkxMzE5LCJuYW1lIjoiSmVzXHUwMGZhcyBHQiIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3NDE2NTMwLCJuYW1lIjoiVmlja3kiLCJnZW5kZXIiOiJmZW1hbGUifSx7ImlkIjoxNzkwOTY3NDI4NDQ2LCJuYW1lIjoiSnVsaW8gUCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3NDUwNjA3LCJuYW1lIjoiSnVhbiBQYWJsbyBQIiwiZ2VuZGVyIjoibWFsZSJ9LHsiaWQiOjE3OTA5Njc0NjU4NTcsIm5hbWUiOiJBbGljaWEgUCIsImdlbmRlciI6ImZlbWFsZSJ9LHsiaWQiOjE3OTA5Njc0ODEwODMsIm5hbWUiOiJKdWFuIFAiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDk2NzQ5NDQ2OCwibmFtZSI6IlNhcmEgUCIsImdlbmRlciI6ImZlbWFsZSJ9LHsiaWQiOjE3OTA5Njc1MTEzNDEsIm5hbWUiOiJNYXJjb3MgTCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3NTI2ODIwLCJuYW1lIjoiSm9yZ2UgTCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTY3NTM5Njc3LCJuYW1lIjoiQWxlamFuZHJvIEwiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDk2OTAyOTI3OSwibmFtZSI6IkNhcm9sIEwiLCJnZW5kZXIiOiJmZW1hbGUifSx7ImlkIjoxNzkwOTY5MDQxODcxLCJuYW1lIjoiTWFyY29zIEQiLCJnZW5kZXIiOiJtYWxlIn0seyJpZCI6MTc5MDk3MDY4Nzk3NCwibmFtZSI6IkNvcmNodSIsImdlbmRlciI6ImZlbWFsZSJ9LHsiaWQiOjE3OTA5NzA3Mjk2NDcsIm5hbWUiOiJEYW5pIFBpY2hlbCIsImdlbmRlciI6Im1hbGUifSx7ImlkIjoxNzkwOTgwMTYyMTcyLCJuYW1lIjoiQWRyaSIsImdlbmRlciI6Im1hbGUifV0sInBhaXJzIjpbeyJpZCI6MTc5MDk4MDY5ODE4MCwicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5Nzk0MSwibmFtZSI6IkNyaXN0aW5hIiwiZ2VuZGVyIjoiZmVtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTAzNjQ4OTc5MjQsIm5hbWUiOiJOYW5kbyIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDcyMjY5MywicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5Nzk0MywibmFtZSI6IkV2YSIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTE5LCJuYW1lIjoiTmVrZSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDcwMjYwNywicGxheWVyMSI6eyJpZCI6MTc5MDk2OTAyOTI3OSwibmFtZSI6IkNhcm9sIEwiLCJnZW5kZXIiOiJmZW1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkyMywibmFtZSI6Ik1vcml0YSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY4MTE0MiwicGxheWVyMSI6eyJpZCI6MTc5MDk2NzMzOTM1NywibmFtZSI6Ik1pcmV5YSIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTE0LCJuYW1lIjoiSm9zXHUwMGU5IE1hbnVlbCIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY5NzQ2NCwicGxheWVyMSI6eyJpZCI6MTc5MDk3MDY4Nzk3NCwibmFtZSI6IkNvcmNodSIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwOTY3MzkxMzE5LCJuYW1lIjoiSmVzXHUwMGZhcyBHQiIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY5NjcwMiwicGxheWVyMSI6eyJpZCI6MTc5MDk2NzQ5NDQ2OCwibmFtZSI6IlNhcmEgUCIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTI4LCJuYW1lIjoiUnViXHUwMGU5biIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDcxMDYzNCwicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5NzkzOSwibmFtZSI6IlZpcmdpbmlhIEpvcmdlIiwiZ2VuZGVyIjoiZmVtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTAzNjQ4OTc5MzcsIm5hbWUiOiJKb3NldGUiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2NDQxODQsInBsYXllcjEiOnsiaWQiOjE3OTAzNjQ4OTc5MzUsIm5hbWUiOiJKb3JnZSIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkyMCwibmFtZSI6IlNldmkiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2NDcxMzcsInBsYXllcjEiOnsiaWQiOjE3OTA5Njc0NjU4NTcsIm5hbWUiOiJBbGljaWEgUCIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTI5LCJuYW1lIjoiQWxmb25zbyIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY4OTk3NCwicGxheWVyMSI6eyJpZCI6MTc5MDk2NzQyODQ0NiwibmFtZSI6Ikp1bGlvIFAiLCJnZW5kZXIiOiJtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTAzNjQ4OTc5MTMsIm5hbWUiOiJGXHUwMGU5bGl4IiwiZ2VuZGVyIjoibWFsZSJ9fSx7ImlkIjoxNzkwOTgwNjU2NjAyLCJwbGF5ZXIxIjp7ImlkIjoxNzkwMzY0ODk3OTQ3LCJuYW1lIjoiQWxpY2lhIFByaW1hIiwiZ2VuZGVyIjoiZmVtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTAzNjQ4OTc5MzgsIm5hbWUiOiJEaW5hbWl0YSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY4MDUwMCwicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5NzkyMSwibmFtZSI6IkNhcmxvcyBNb250aWxsYSIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkzMiwibmFtZSI6IkFsZm9uc28gTW9yYSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY4NDU1OSwicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5NzkxMiwibmFtZSI6IkFsdmFybyIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkyNiwibmFtZSI6IkN1cml0YSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY5NzcxNiwicGxheWVyMSI6eyJpZCI6MTc5MDM2NDg5Nzk0MiwibmFtZSI6IkVsZW5hIiwiZ2VuZGVyIjoiZmVtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTA5Njc0ODEwODMsIm5hbWUiOiJKdWFuIFAiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2NTY3OTcsInBsYXllcjEiOnsiaWQiOjE3OTAzNjQ4OTc5MTYsIm5hbWUiOiJSYVx1MDBmYWwgQWxpY2lhIiwiZ2VuZGVyIjoibWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTM0LCJuYW1lIjoiSmF2aSBDb25lam8iLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA3MzA3NjUsInBsYXllcjEiOnsiaWQiOjE3OTAzNjQ4OTc5NDUsIm5hbWUiOiJKZW5ueSIsImdlbmRlciI6ImZlbWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwOTY3MzYzMDQ5LCJuYW1lIjoiQ2FybG9zIEciLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2Nzg0MTYsInBsYXllcjEiOnsiaWQiOjE3OTAzNjQ4OTc5MjUsIm5hbWUiOiJWXHUwMGVkY3RvciIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkzNiwibmFtZSI6IlJhdWwiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2OTMzMzAsInBsYXllcjEiOnsiaWQiOjE3OTAzNjQ4OTc5MTcsIm5hbWUiOiJTb2JyaW5vIGRlIE5hbmRvIiwiZ2VuZGVyIjoibWFsZSJ9LCJwbGF5ZXIyIjp7ImlkIjoxNzkwMzY0ODk3OTE1LCJuYW1lIjoiSVx1MDBmMWFraSIsImdlbmRlciI6Im1hbGUifX0seyJpZCI6MTc5MDk4MDY5OTE2NCwicGxheWVyMSI6eyJpZCI6MTc5MDk2NzQ1MDYwNywibmFtZSI6Ikp1YW4gUGFibG8gUCIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDk2NzM3NjcyNiwibmFtZSI6IkFsb25zbyBCIiwiZ2VuZGVyIjoibWFsZSJ9fSx7ImlkIjoxNzkwOTgwNzEzNzE5LCJwbGF5ZXIxIjp7ImlkIjoxNzkwOTY5MDQxODcxLCJuYW1lIjoiTWFyY29zIEQiLCJnZW5kZXIiOiJtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTAzNjQ4OTc5MjcsIm5hbWUiOiJTb3RvIiwiZ2VuZGVyIjoibWFsZSJ9fSx7ImlkIjoxNzkwOTgwNjU3NTc4LCJwbGF5ZXIxIjp7ImlkIjoxNzkwMzY0ODk3OTQwLCJuYW1lIjoiS2l0dHkiLCJnZW5kZXIiOiJmZW1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDk2NzUyNjgyMCwibmFtZSI6IkpvcmdlIEwiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2ODQ0MjQsInBsYXllcjEiOnsiaWQiOjE3OTA5NzA3Mjk2NDcsIm5hbWUiOiJEYW5pIFBpY2hlbCIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDk2NzMyNzI3MywibmFtZSI6IlNhbnRpIFEiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2NDIzNjcsInBsYXllcjEiOnsiaWQiOjE3OTA5Njc1MTEzNDEsIm5hbWUiOiJNYXJjb3MgTCIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkzMCwibmFtZSI6IkRhbmkgUm9qYXMiLCJnZW5kZXIiOiJtYWxlIn19LHsiaWQiOjE3OTA5ODA2NjUzMzEsInBsYXllcjEiOnsiaWQiOjE3OTA5Njc1Mzk2NzcsIm5hbWUiOiJBbGVqYW5kcm8gTCIsImdlbmRlciI6Im1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkzMSwibmFtZSI6Ik1hcmlvIiwiZ2VuZGVyIjoibWFsZSJ9fSx7ImlkIjoxNzkwOTgwNjc5MjU5LCJwbGF5ZXIxIjp7ImlkIjoxNzkwMzY0ODk3OTMzLCJuYW1lIjoiQ3Jpc3RpYW4gSmVubnkiLCJnZW5kZXIiOiJtYWxlIn0sInBsYXllcjIiOnsiaWQiOjE3OTA5ODAxNjIxNzIsIm5hbWUiOiJBZHJpIiwiZ2VuZGVyIjoibWFsZSJ9fSx7ImlkIjoxNzkwOTgwNjczNjM3LCJwbGF5ZXIxIjp7ImlkIjoxNzkwOTY3NDE2NTMwLCJuYW1lIjoiVmlja3kiLCJnZW5kZXIiOiJmZW1hbGUifSwicGxheWVyMiI6eyJpZCI6MTc5MDM2NDg5NzkxOCwibmFtZSI6Ikx1aXNtaSIsImdlbmRlciI6Im1hbGUifX1dLCJtYXRjaGVzIjpbXSwidXBkYXRlZEF0IjoxNzkxMDE1OTUyOTYxLCJncm91cHMiOltdLCJrbyI6W119"}; // @@BACKUP@@
 
 function initialData() {
   if (BACKUP_DATA) {
     try { return normalize(JSON.parse(atob(BACKUP_DATA.data))); } catch (e) {}
   }
-  return { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [], updatedAt: 0 };
+  return { players: initialPlayers.map(p => ({...p})), pairs: [], matches: [], groups: [], ko: [], updatedAt: 0 };
 }
 
-let gameData = { players: [], pairs: [], matches: [] };
+let gameData = { players: [], pairs: [], matches: [], groups: [], ko: [] };
 let unlocked = false, passResolve = null;
 let publishTimer = null, publishing = false, publishAgain = false, tokenResolve = null;
 let resultMatchId = null, pendingRestore = null;
@@ -265,7 +257,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 function normalize(d) {
   d = d || {};
   const arr = v => Array.isArray(v) ? v.filter(Boolean) : Object.values(v || {});
-  return { players: arr(d.players), pairs: arr(d.pairs), matches: arr(d.matches), updatedAt: Number(d.updatedAt) || 0 };
+  return { players: arr(d.players), pairs: arr(d.pairs), matches: arr(d.matches), groups: Array.isArray(d.groups) ? d.groups : [], ko: arr(d.ko), updatedAt: Number(d.updatedAt) || 0 };
 }
 
 /* ---------- Mensajes ---------- */
@@ -298,9 +290,11 @@ async function loadData() {
   try { const sv = localStorage.getItem(STORE_KEY); if (sv) local = normalize(JSON.parse(sv)); } catch (e) {}
   try { remote = await fetchRemote(); setStatus(true, '🟢 Actualizado · ' + nowStr()); }
   catch (e) { setStatus(false, '🔴 Sin conexión: se muestra la última copia'); }
-  const best = [remote, local].filter(Boolean).sort((x, y) => y.updatedAt - x.updatedAt)[0];
+  const seed = BACKUP_DATA ? initialData() : null;
+  const best = [remote, local, seed].filter(Boolean).sort((x, y) => y.updatedAt - x.updatedAt)[0];
   gameData = best || initialData();
   render();
+  if (best === seed && seed && seed.updatedAt && localStorage.getItem(TOKEN_KEY)) schedulePublish();
   if (local && remote && local.updatedAt > remote.updatedAt && localStorage.getItem(TOKEN_KEY)) schedulePublish();
   setInterval(poll, POLL_MS);
 }
@@ -411,7 +405,7 @@ function addPlayer() {
   if (!name || !gender) return showErr('Por favor, ingresa nombre y género.');
   if (gameData.players.some(p => p.name.toLowerCase() === name.toLowerCase())) return showErr('Este jugador ya existe.');
   gameData.players.push({ id: uid(), name, gender });
-  gameData.pairs = []; gameData.matches = [];
+  gameData.pairs = []; gameData.matches = []; gameData.groups = []; gameData.ko = [];
   saveData(); render();
   $('playerName').value = ''; $('playerGender').value = '';
   showOk('Jugador agregado: ' + name + ' (las parejas se han reiniciado)');
@@ -420,13 +414,13 @@ function removePlayer(id) {
   guard(() => {
     const p = gameData.players.find(x => x.id === id); if (!p) return;
     gameData.players = gameData.players.filter(x => x.id !== id);
-    gameData.pairs = []; gameData.matches = [];
+    gameData.pairs = []; gameData.matches = []; gameData.groups = []; gameData.ko = [];
     saveData(); render(); showOk('Jugador eliminado: ' + p.name);
   });
 }
 function clearAll() {
   if (!confirm('¿Eliminar TODOS los jugadores, parejas y partidos (para todos los usuarios)?')) return;
-  gameData = { players: [], pairs: [], matches: [] }; saveData(); render(); showOk('Todos los datos han sido eliminados.');
+  gameData = { players: [], pairs: [], matches: [], groups: [], ko: [] }; saveData(); render(); showOk('Todos los datos han sido eliminados.');
 }
 
 /* ---------- Parejas ---------- */
@@ -442,61 +436,108 @@ function generatePairs() {
   // Hombres restantes juntos
   while (men.length > 1) pairs.push({ id: uid(), player1: men.pop(), player2: men.pop() });
   if (men.length) pairs.push({ id: uid(), player1: men.pop(), player2: null });
-  gameData.pairs = shuffle(pairs); gameData.matches = [];
+  gameData.pairs = shuffle(pairs); gameData.matches = []; gameData.groups = []; gameData.ko = [];
   saveData(); render();
   showOk('✅ Parejas generadas: ' + pairs.length + ' (sin 2 mujeres juntas)');
 }
 function removePair(id) {
   guard(() => {
-    gameData.pairs = gameData.pairs.filter(p => p.id !== id); gameData.matches = [];
+    gameData.pairs = gameData.pairs.filter(p => p.id !== id); gameData.matches = []; gameData.groups = []; gameData.ko = [];
     saveData(); render(); showOk('Pareja eliminada. Los partidos se han reiniciado.');
   });
 }
 function cleanIncomplete() {
   const n = gameData.pairs.filter(p => !p.player2).length;
   if (!n) return showErr('No hay parejas incompletas.');
-  gameData.pairs = gameData.pairs.filter(p => p.player2); gameData.matches = [];
+  gameData.pairs = gameData.pairs.filter(p => p.player2); gameData.matches = []; gameData.groups = []; gameData.ko = [];
   saveData(); render(); showOk('Parejas incompletas eliminadas: ' + n);
 }
 function resetPairs() {
   if (!confirm('¿Resetear parejas y partidos?')) return;
-  gameData.pairs = []; gameData.matches = []; saveData(); render(); showOk('Parejas reseteadas.');
+  gameData.pairs = []; gameData.matches = []; gameData.groups = []; gameData.ko = []; saveData(); render(); showOk('Parejas reseteadas.');
 }
 
 /* ---------- Partidos ---------- */
+const TARGET_G = 10, TARGET_KO = 15;
+const gName = i => 'Grupo ' + String.fromCharCode(65 + i);
+let mid = Date.now(); const nid = () => ++mid;
+const findM = id => gameData.matches.find(x => x.id === id) || gameData.ko.find(x => x.id === id);
+const mk = (g, a, b, ko) => ({ id: nid(), g, ko: !!ko, pair1Id: a, pair2Id: b, sets1: 0, sets2: 0, finished: false });
+
 function generateMatches() {
-  const ready = gameData.pairs.filter(p => p.player2);
-  if (ready.length < 2) return showErr('Necesitas al menos 2 parejas completas.');
-  const s = shuffle(ready), matches = [];
-  for (let i = 0; i + 1 < s.length; i += 2) matches.push({ id: uid() + i, pair1Id: s[i].id, pair2Id: s[i + 1].id, sets1: 0, sets2: 0, finished: false });
-  gameData.matches = matches; saveData(); render();
-  showOk('✅ Partidos generados: ' + matches.length + (s.length % 2 ? ' (una pareja descansa)' : ''));
+  const ready = gameData.pairs.filter(p => p.player2), n = ready.length;
+  if (n < 2) return showErr('Necesitas al menos 2 parejas completas.');
+  const g = Math.ceil(n / 4), need = 16 - 2 * g;
+  if (need < 0 || need > g) return showErr('Con ' + n + ' parejas no salen 16 clasificados para octavos.');
+  if ((gameData.matches.some(m => m.finished) || gameData.ko.length) && !confirm('Ya hay resultados. ¿Volver a sortear los grupos y borrarlos?')) return;
+  const sh = shuffle(ready), size = Math.floor(n / g), extra = n % g, groups = [], matches = [];
+  let k = 0;
+  for (let i = 0; i < g; i++) { const c = size + (i < extra ? 1 : 0); groups.push(sh.slice(k, k + c).map(p => p.id)); k += c; }
+  groups.forEach((ids, gi) => { for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) matches.push(mk(gi, ids[a], ids[b])); });
+  gameData.groups = groups; gameData.matches = matches; gameData.ko = [];
+  saveData(); render();
+  showOk('✅ ' + g + ' grupos y ' + matches.length + ' partidos generados.');
+  viewMatches();
 }
 function viewMatches() { $('matchesSection').scrollIntoView({ behavior: 'smooth' }); }
 
+const avg = (r, f) => r.pj ? f(r) / r.pj : 0;
+const cmpAvg = (x, y) => avg(y, r => r.w) - avg(x, r => r.w) || avg(y, r => r.pf - r.pc) - avg(x, r => r.pf - r.pc) || avg(y, r => r.pf) - avg(x, r => r.pf);
+function standings() {
+  const rows = gameData.groups.map((ids, gi) => {
+    const st = {}; ids.forEach(id => st[id] = { id, pj: 0, w: 0, pf: 0, pc: 0 });
+    gameData.matches.filter(m => m.g === gi && m.finished).forEach(m => {
+      const a = st[m.pair1Id], b = st[m.pair2Id]; if (!a || !b) return;
+      a.pj++; b.pj++; a.pf += m.sets1; a.pc += m.sets2; b.pf += m.sets2; b.pc += m.sets1;
+      if (m.sets1 > m.sets2) a.w++; else b.w++;
+    });
+    return Object.values(st).sort((x, y) => y.w - x.w || (y.pf - y.pc) - (x.pf - x.pc) || y.pf - x.pf);
+  });
+  const thirds = rows.map((r, gi) => r[2] && { ...r[2], gi }).filter(Boolean).sort(cmpAvg);
+  const need = Math.max(0, 16 - 2 * rows.length);
+  return { rows, thirds, q: new Set(thirds.slice(0, need).map(r => r.id)), need };
+}
+function generateKO() {
+  if (!gameData.groups.length) return showErr('Primero genera los grupos.');
+  if (gameData.matches.some(m => !m.finished)) return showErr('Faltan resultados de la fase de grupos.');
+  if (gameData.ko.some(m => m.finished) && !confirm('Ya hay resultados de octavos. ¿Regenerarlos?')) return;
+  const S = standings();
+  const seeds = [...S.rows.map(r => r[0]).sort(cmpAvg), ...S.rows.map(r => r[1]).sort(cmpAvg), ...S.thirds.filter(r => S.q.has(r.id))];
+  if (seeds.length !== 16) return showErr('No se han podido determinar 16 clasificados.');
+  gameData.ko = Array.from({ length: 8 }, (_, i) => mk(null, seeds[i].id, seeds[15 - i].id, true));
+  saveData(); render(); showOk('✅ Octavos generados (1º mejor clasificado vs peor clasificado, etc.).');
+  $('koSection').scrollIntoView({ behavior: 'smooth' });
+}
+
 function openResult(id) {
   guard(() => {
-    const m = gameData.matches.find(x => x.id === id); if (!m) return;
+    const m = findM(id); if (!m) return;
     resultMatchId = id;
     $('resultText').innerHTML = pairName(pairById(m.pair1Id)) + ' <b>vs</b> ' + pairName(pairById(m.pair2Id));
-    $('pair1Label').innerHTML = pairName(pairById(m.pair1Id)) + ' (Sets)';
-    $('pair2Label').innerHTML = pairName(pairById(m.pair2Id)) + ' (Sets)';
+    $('pair1Label').innerHTML = pairName(pairById(m.pair1Id)) + ' (puntos)';
+    $('pair2Label').innerHTML = pairName(pairById(m.pair2Id)) + ' (puntos)';
+    $('resultRule').textContent = m.ko ? 'Octavos: se juega a 15 puntos.' : 'Fase de grupos: tie-break a 10 puntos.';
     $('sets1').value = m.sets1 || 0; $('sets2').value = m.sets2 || 0;
     $('resultModal').classList.add('show');
   });
 }
 function saveResult() {
-  const a = parseInt($('sets1').value) || 0, b = parseInt($('sets2').value) || 0;
-  if (a < 0 || b < 0 || a > 2 || b > 2 || a === b || Math.max(a, b) !== 2) return showErr('Resultado no válido: debe ganar uno con 2 sets y el otro tener 0 o 1.');
-  const m = gameData.matches.find(x => x.id === resultMatchId); if (!m) return;
+  const m = findM(resultMatchId); if (!m) return;
+  const a = parseInt($('sets1').value), b = parseInt($('sets2').value), t = m.ko ? TARGET_KO : TARGET_G;
+  if (isNaN(a) || isNaN(b) || a < 0 || b < 0 || a === b || Math.max(a, b) < t) return showErr('Resultado no válido: no puede haber empate y quien gana debe llegar al menos a ' + t + ' puntos.');
   m.sets1 = a; m.sets2 = b; m.finished = true;
   closeModal('resultModal'); saveData(); render(); showOk('Resultado guardado.');
 }
 function clearResult(id) {
-  guard(() => { const m = gameData.matches.find(x => x.id === id); if (!m) return; m.sets1 = 0; m.sets2 = 0; m.finished = false; saveData(); render(); });
+  guard(() => { const m = findM(id); if (!m) return; m.sets1 = 0; m.sets2 = 0; m.finished = false; saveData(); render(); });
 }
 
 /* ---------- Render ---------- */
+function matchRow(m, label) {
+  const badge = m.finished ? `<span class="badge done">${m.sets1} - ${m.sets2}</span>` : `<span class="badge">Pendiente</span>`;
+  return `<div class="item match-item"><div class="match-info"><b>${label}</b><br>${pairName(pairById(m.pair1Id))} <b>vs</b> ${pairName(pairById(m.pair2Id))}</div>${badge}
+    <div style="display:flex;gap:6px"><button class="small" onclick="openResult(${m.id})">${m.finished ? '✏️ Editar' : '📝 Resultado'}</button>${m.finished ? `<button class="warning small" onclick="clearResult(${m.id})">↺</button>` : ''}</div></div>`;
+}
 function render() {
   const P = gameData.players;
   $('maleCount').textContent = P.filter(p => p.gender === 'male').length;
@@ -511,36 +552,24 @@ function render() {
     `<div class="item pair-item"><span>${i + 1}. ${pairName(p)}</span><button class="danger small" onclick="removePair(${p.id})">✕</button></div>`
   ).join('') : '<div class="empty">Sin parejas todavía. Genera las parejas primero.</div>';
 
-  const used = new Set();
-  $('matchesList').innerHTML = gameData.matches.length ? gameData.matches.map((m, i) => {
-    used.add(m.pair1Id); used.add(m.pair2Id);
-    const badge = m.finished ? `<span class="badge done">${m.sets1} - ${m.sets2}</span>` : `<span class="badge">Pendiente</span>`;
-    return `<div class="item match-item"><div class="match-info"><b>Partido ${i + 1}</b><br>${pairName(pairById(m.pair1Id))} <b>vs</b> ${pairName(pairById(m.pair2Id))}</div>${badge}
-      <div style="display:flex;gap:6px"><button class="small" onclick="openResult(${m.id})">${m.finished ? '✏️ Editar' : '📝 Resultado'}</button>${m.finished ? `<button class="warning small" onclick="clearResult(${m.id})">↺</button>` : ''}</div></div>`;
-  }).join('') + (() => {
-    const rest = gameData.pairs.filter(p => p.player2 && !used.has(p.id));
-    return rest.length ? `<div class="item match-item" style="border-left-color:#aaa;background:#f8f9fa">😴 Descansa: ${rest.map(pairName).join(', ')}</div>` : '';
-  })() : '<div class="empty">Los partidos aparecerán aquí una vez generes los emparejamientos.</div>';
+  const S = standings();
+  $('matchesList').innerHTML = S.rows.length ? S.rows.map((rows, gi) => {
+    const ms = gameData.matches.filter(m => m.g === gi);
+    const tr = rows.map((r, i) => `<tr class="${i < 2 ? 'q1' : (i === 2 && S.q.has(r.id) ? 'q3' : '')}"><td class="pos">${i + 1}</td><td>${pairName(pairById(r.id))}</td><td>${r.pj}</td><td><b>${r.w}</b></td><td>${r.pf - r.pc > 0 ? '+' : ''}${r.pf - r.pc}</td></tr>`).join('');
+    return `<div class="gcard"><h3>${gName(gi)} <small>· ${rows.length} parejas · ${ms.length} partidos</small></h3>
+      <table><thead><tr><th style="width:30px">#</th><th>Pareja</th><th style="width:36px">PJ</th><th style="width:36px">G</th><th style="width:44px">+/-</th></tr></thead><tbody>${tr}</tbody></table>
+      ${ms.map((m, i) => matchRow(m, 'Partido ' + (i + 1))).join('')}</div>`;
+  }).join('') : '<div class="empty">Pulsa «Generar Emparejamientos» para sortear los grupos y crear todos los partidos.</div>';
 
-  const stats = {};
-  gameData.pairs.filter(p => p.player2).forEach(p => stats[p.id] = { pair: p, pj: 0, pts: 0, diff: 0 });
-  gameData.matches.filter(m => m.finished).forEach(m => {
-    const a = stats[m.pair1Id], b = stats[m.pair2Id]; if (!a || !b) return;
-    a.pj++; b.pj++; a.diff += m.sets1 - m.sets2; b.diff += m.sets2 - m.sets1;
-    if (m.sets1 > m.sets2) a.pts += 3; else b.pts += 3;
-  });
-  const rank = Object.values(stats).sort((x, y) => y.pts - x.pts || y.diff - x.diff || x.pair.player1.name.localeCompare(y.pair.player1.name));
-  $('rankingBody').innerHTML = rank.length ? rank.map((r, i) =>
-    `<tr><td class="pos">${i + 1}</td><td>${pairName(r.pair)}</td><td>${r.pj}</td><td><b>${r.pts}</b></td></tr>`
-  ).join('') : '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Genera los emparejamientos para ver la clasificación</td></tr>';
+  $('thirdsBox').innerHTML = S.thirds.length ? `<h3 style="color:#667eea;font-size:15px;margin:6px 0">🥉 Terceros clasificados (pasan los ${S.need} mejores)</h3>
+    <table><thead><tr><th style="width:30px">#</th><th>Pareja</th><th>Grupo</th><th style="width:36px">PJ</th><th style="width:36px">G</th><th style="width:44px">+/-</th></tr></thead><tbody>${S.thirds.map((r, i) => `<tr class="${S.q.has(r.id) ? 'q3' : ''}"><td class="pos">${i + 1}</td><td>${pairName(pairById(r.id))}</td><td>${gName(r.gi).slice(6)}</td><td>${r.pj}</td><td><b>${r.w}</b></td><td>${r.pf - r.pc > 0 ? '+' : ''}${r.pf - r.pc}</td></tr>`).join('')}</tbody></table>
+    <p class="hint" style="margin-top:6px">Orden: victorias, diferencia de puntos y puntos a favor (por partido jugado, porque un grupo es de 3).</p>` : '';
+
+  $('koList').innerHTML = gameData.ko.length ? gameData.ko.map((m, i) => matchRow(m, 'Octavos ' + (i + 1))).join('') : '<div class="empty">Cuando termine la fase de grupos, pulsa «Generar Octavos».</div>';
 }
 
 /* ---------- Backup ---------- */
-function openDownload() { $('dlPass').value = ''; $('dlPass2').value = ''; $('downloadModal').classList.add('show'); $('dlPass').focus(); }
-async function confirmDownload() {
-  const a = $('dlPass').value, b = $('dlPass2').value;
-  if (!a) return showErr('Introduce una contraseña.');
-  if (a !== b) return showErr('Las contraseñas no coinciden.');
+async function downloadBackup() {
   let src;
   try {
     const res = await fetch(location.href.split('#')[0].split('?')[0], { cache: 'no-store' });
@@ -548,13 +577,13 @@ async function confirmDownload() {
     src = await res.text();
   } catch (e) { return showErr('No se pudo generar el backup (abre la web publicada, no el archivo local).'); }
   const json = JSON.stringify(gameData).replace(/[\u0100-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
-  const blob = JSON.stringify({ v: 1, timestamp: new Date().toISOString(), data: btoa(json), password: btoa(a) });
+  const blob = JSON.stringify({ v: 1, timestamp: new Date().toISOString(), data: btoa(json) });
   const marker = new RegExp('const BACKUP_DATA = .*?; // @@' + 'BACKUP@@');
   if (!marker.test(src)) return showErr('No se encontró el marcador de backup en el archivo.');
   src = src.replace(marker, () => 'const BACKUP_DATA = ' + blob + '; // @@' + 'BACKUP@@');
   const url = URL.createObjectURL(new Blob([src], { type: 'text/html' }));
   const link = document.createElement('a'); link.href = url; link.download = 'index.html'; link.click();
-  URL.revokeObjectURL(url); closeModal('downloadModal'); showOk('Backup descargado como index.html');
+  URL.revokeObjectURL(url); showOk('Backup descargado como index.html');
 }
 $('restoreFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
@@ -562,30 +591,17 @@ $('restoreFile').addEventListener('change', e => {
   r.onload = () => {
     try {
       const t = r.result.trim();
-      if (t.startsWith('{')) pendingRestore = JSON.parse(t);
-      else {
-        const m = t.match(new RegExp('const BACKUP_DATA = (\\{.*?\\}); // @@' + 'BACKUP@@'));
-        if (!m) throw 0;
-        pendingRestore = JSON.parse(m[1]);
-      }
-      if (!pendingRestore.data || !pendingRestore.password) throw 0;
-    }
-    catch (err) { showErr('Ese archivo no contiene un backup válido.'); pendingRestore = null; return; }
-    $('rsPass').value = ''; $('restoreModal').classList.add('show'); $('rsPass').focus();
+      let obj;
+      if (t.startsWith('{')) obj = JSON.parse(t);
+      else { const m = t.match(new RegExp('const BACKUP_DATA = (\\{.*?\\}); // @@' + 'BACKUP@@')); if (!m) throw 0; obj = JSON.parse(m[1]); }
+      if (!obj.data) throw 0;
+      const d = normalize(JSON.parse(atob(obj.data)));
+      if (!confirm('Esto sustituirá los datos de TODOS los usuarios (' + d.players.length + ' jugadores). ¿Continuar?')) return;
+      gameData = d; saveData(); render(); showOk('✅ Backup restaurado: ' + d.players.length + ' jugadores.');
+    } catch (err) { showErr('Ese archivo no contiene un backup válido.'); }
   };
   r.readAsText(f); e.target.value = '';
 });
-function cancelRestore() { closeModal('restoreModal'); pendingRestore = null; }
-function confirmRestore() {
-  if (!pendingRestore) return;
-  let ok = false; try { ok = atob(pendingRestore.password) === $('rsPass').value; } catch (e) {}
-  if (!ok) return showErr('❌ Contraseña del backup incorrecta.');
-  try {
-    const d = normalize(JSON.parse(atob(pendingRestore.data)));
-    gameData = d; saveData(); render(); showOk('✅ Backup restaurado: ' + d.players.length + ' jugadores. Ya lo ven todos.');
-  } catch (e) { showErr('El backup está dañado.'); }
-  cancelRestore();
-}
 
 loadData();
 </script>
