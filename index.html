@@ -118,7 +118,7 @@ tr.q1{background:#e8f8ee}tr.q3{background:#fff6d6}
 
 <div class="section" id="matchesSection">
 <h2>📋 Fase de grupos</h2>
-<p class="hint">Cada pareja juega contra todas las de su grupo. Cada partido es un tie-break a 10 puntos. Pasan los 2 primeros de cada grupo (verde) y los 2 mejores terceros (amarillo).</p>
+<p class="hint">Cada pareja juega contra todas las de su grupo. Cada partido es un tie-break a 10 puntos. Pasan los 2 primeros de cada grupo (verde) y los 4 mejores terceros (amarillo).</p>
 <div id="matchesList"></div>
 <div id="thirdsBox"></div>
 </div>
@@ -467,8 +467,8 @@ const mk = (g, a, b, ko) => ({ id: nid(), g, ko: !!ko, pair1Id: a, pair2Id: b, s
 function generateMatches() {
   const ready = gameData.pairs.filter(p => p.player2), n = ready.length;
   if (n < 2) return showErr('Necesitas al menos 2 parejas completas.');
-  const g = Math.ceil(n / 4), need = 16 - 2 * g;
-  if (need < 0 || need > g) return showErr('Con ' + n + ' parejas no salen 16 clasificados para octavos.');
+  const g = 6;
+  if (n < 18) return showErr('Necesitas al menos 18 parejas completas para 6 grupos (ahora hay ' + n + ').');
   if ((gameData.matches.some(m => m.finished) || gameData.ko.length) && !confirm('Ya hay resultados. ¿Volver a sortear los grupos y borrarlos?')) return;
   const sh = shuffle(ready), size = Math.floor(n / g), extra = n % g, groups = [], matches = [];
   let k = 0;
@@ -476,7 +476,7 @@ function generateMatches() {
   groups.forEach((ids, gi) => { for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) matches.push(mk(gi, ids[a], ids[b])); });
   gameData.groups = groups; gameData.matches = matches; gameData.ko = [];
   saveData(); render();
-  showOk('✅ ' + g + ' grupos y ' + matches.length + ' partidos generados.');
+  showOk('✅ ' + g + ' grupos (' + groups.map(x => x.length).join(', ') + ' parejas) y ' + matches.length + ' partidos generados.');
   viewMatches();
 }
 function viewMatches() { $('matchesSection').scrollIntoView({ behavior: 'smooth' }); }
@@ -563,7 +563,7 @@ function render() {
 
   $('thirdsBox').innerHTML = S.thirds.length ? `<h3 style="color:#667eea;font-size:15px;margin:6px 0">🥉 Terceros clasificados (pasan los ${S.need} mejores)</h3>
     <table><thead><tr><th style="width:30px">#</th><th>Pareja</th><th>Grupo</th><th style="width:36px">PJ</th><th style="width:36px">G</th><th style="width:44px">+/-</th></tr></thead><tbody>${S.thirds.map((r, i) => `<tr class="${S.q.has(r.id) ? 'q3' : ''}"><td class="pos">${i + 1}</td><td>${pairName(pairById(r.id))}</td><td>${gName(r.gi).slice(6)}</td><td>${r.pj}</td><td><b>${r.w}</b></td><td>${r.pf - r.pc > 0 ? '+' : ''}${r.pf - r.pc}</td></tr>`).join('')}</tbody></table>
-    <p class="hint" style="margin-top:6px">Orden: victorias, diferencia de puntos y puntos a favor (por partido jugado, porque un grupo es de 3).</p>` : '';
+    <p class="hint" style="margin-top:6px">Orden: victorias, diferencia de puntos y puntos a favor (por partido jugado, porque los grupos son de distinto tamaño).</p>` : '';
 
   $('koList').innerHTML = gameData.ko.length ? gameData.ko.map((m, i) => matchRow(m, 'Octavos ' + (i + 1))).join('') : '<div class="empty">Cuando termine la fase de grupos, pulsa «Generar Octavos».</div>';
 }
